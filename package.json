@@ -1,0 +1,19 @@
+{
+    "name": "animate-spine-converter",
+    "description": "A simple JSFL script that converts basic Adobe Animate (Adobe Flash) animations to the Spine format.",
+    "version": "1.0.0",
+    "homepage": "https://github.com/dmn-chumak/animate-spine-converter",
+    "main": "./output/converter.jsfl",
+    "author": "dmn-chumak",
+    "license": "MIT",
+    "scripts": {
+        "compile": "node ./compile.config.js"
+    },
+    "devDependencies": {
+        "@types/jsfl": "^0.0.35",
+        "ts-loader": "^9.4.2",
+        "typescript": "^5.0.2",
+        "webpack": "^5.76.3",
+        "webpack-cli": "^5.0.1"
+    }
+}

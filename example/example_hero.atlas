@@ -1,0 +1,48 @@
+
+example_hero.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1_head
+  rotate: false
+  xy: 2, 36
+  size: 192, 192
+  orig: 192, 192
+  offset: 0, 0
+  index: -1
+2_body
+  rotate: false
+  xy: 2, 230
+  size: 132, 220
+  orig: 132, 220
+  offset: 0, 0
+  index: -1
+3_forearm
+  rotate: false
+  xy: 196, 2
+  size: 60, 116
+  orig: 60, 116
+  offset: 0, 0
+  index: -1
+3_hand
+  rotate: false
+  xy: 136, 266
+  size: 96, 184
+  orig: 96, 184
+  offset: 0, 0
+  index: -1
+4_foot
+  rotate: false
+  xy: 196, 120
+  size: 116, 144
+  orig: 116, 144
+  offset: 0, 0
+  index: -1
+4_leg
+  rotate: false
+  xy: 234, 330
+  size: 84, 120
+  orig: 84, 120
+  offset: 0, 0
+  index: -1

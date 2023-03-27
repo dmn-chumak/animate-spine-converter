@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "./output/",
+
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "strictBindCallApply": true,
+        "allowSyntheticDefaultImports": true,
+        "alwaysStrict": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "es5",
+
+        "lib": [ "es5" ],
+        "typeRoots": [
+            "./node_modules/@types/",
+            "./runtime.d.ts"
+        ],
+        "paths": {
+            "*": [
+                "*"
+            ]
+        }
+    },
+    "exclude": [
+        "assets",
+        "node_modules",
+        "output"
+    ],
+    "files": [
+        "./source/index.ts",
+        "./runtime.d.ts"
+    ]
+}
