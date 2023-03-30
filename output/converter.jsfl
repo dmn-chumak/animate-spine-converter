@@ -2091,7 +2091,7 @@ var config = {
     transformRootBone: false,
     exportShapes: true,
     exportTextAsShapes: true,
-    shapeExportScale: 4,
+    shapeExportScale: 2,
     mergeShapes: true,
     exportImages: true,
     mergeImages: true
