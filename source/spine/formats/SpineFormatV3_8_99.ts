@@ -240,9 +240,7 @@ export class SpineFormatV3_8_99 implements SpineFormat {
         const result:any = {};
 
         for (const slot of skeleton.slots) {
-            if (slot.attachment != null) {
-                result[slot.name] = this.convertSlotAttachments(slot);
-            }
+            result[slot.name] = this.convertSlotAttachments(slot);
         }
 
         return result;

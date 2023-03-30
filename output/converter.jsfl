@@ -91,7 +91,7 @@ var Converter = /** @class */ (function () {
     //-----------------------------------
     Converter.prototype.composeElementMaskLayer = function (context, convertLayer) {
         var _this = this;
-        this.convertElementLayer(context, convertLayer, function (subcontext) {
+        this.convertElementLayer(context.switchContextLayer(convertLayer), convertLayer, function (subcontext) {
             if (subcontext.element.elementType === 'shape') {
                 _this.convertShapeMaskElementSlot(subcontext);
                 context.clipping = subcontext.clipping;
@@ -110,7 +110,7 @@ var Converter = /** @class */ (function () {
     };
     Converter.prototype.convertCompositeElementLayer = function (context, convertLayer) {
         var _this = this;
-        this.convertElementLayer(context, convertLayer, function (subcontext) {
+        this.convertElementLayer(context.switchContextLayer(convertLayer), convertLayer, function (subcontext) {
             var _a = subcontext.element, elementType = _a.elementType, instanceType = _a.instanceType;
             if (elementType === 'shape') {
                 _this.convertShapeElementSlot(subcontext);
@@ -161,8 +161,18 @@ var Converter = /** @class */ (function () {
             if (frame == null || frame.startFrame !== frameIdx) {
                 continue;
             }
-            for (var _i = 0, _b = frame.elements; _i < _b.length; _i++) {
-                var element = _b[_i];
+            if (frame.elements.length === 0) {
+                var layerSlots = context.global.layersCache.get(context.layer);
+                if (layerSlots != null) {
+                    for (var _i = 0, layerSlots_1 = layerSlots; _i < layerSlots_1.length; _i++) {
+                        var slot = layerSlots_1[_i];
+                        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, null, frameTime);
+                    }
+                }
+                continue;
+            }
+            for (var _b = 0, _c = frame.elements; _b < _c.length; _b++) {
+                var element = _c[_b];
                 var subcontext = context.createBone(element, frameTime);
                 this._document.library.editItem(context.element.libraryItem.name);
                 this._document.getTimeline().currentFrame = frame.startFrame;
@@ -197,7 +207,7 @@ var Converter = /** @class */ (function () {
                 var _a = context.global, skeleton = _a.skeleton, labels = _a.labels;
                 for (var _i = 0, labels_1 = labels; _i < labels_1.length; _i++) {
                     var label = labels_1[_i];
-                    var subcontext = context.createAnimation(label);
+                    var subcontext = context.switchContextAnimation(label);
                     this.convertElement(subcontext);
                 }
                 return skeleton;
@@ -244,6 +254,23 @@ var ConverterContext = /** @class */ (function () {
     function ConverterContext() {
         // empty
     }
+    //-----------------------------------
+    ConverterContext.prototype.switchContextAnimation = function (label) {
+        var _a = this.global, skeleton = _a.skeleton, labels = _a.labels;
+        if (labels.indexOf(label) !== -1) {
+            this.global.animation = skeleton.createAnimation(label.name);
+            this.global.label = label;
+        }
+        return this;
+    };
+    ConverterContext.prototype.switchContextLayer = function (layer) {
+        this.layer = layer;
+        if (this.global.layersCache.get(layer) == null) {
+            this.global.layersCache.set(layer, []);
+        }
+        return this;
+    };
+    //-----------------------------------
     ConverterContext.prototype.createBone = function (element, frame) {
         var context = new ConverterContext();
         //-----------------------------------
@@ -254,6 +281,7 @@ var ConverterContext = /** @class */ (function () {
         context.parent = this;
         context.blendMode = ConvertUtil_1.ConvertUtil.obtainElementBlendMode(element);
         context.alpha = this.alpha * ConvertUtil_1.ConvertUtil.obtainElementAlpha(element);
+        context.layer = this.layer;
         context.element = element;
         context.frame = frame;
         if (this.blendMode !== "normal" /* SpineBlendMode.NORMAL */ && context.blendMode === "normal" /* SpineBlendMode.NORMAL */) {
@@ -269,14 +297,6 @@ var ConverterContext = /** @class */ (function () {
         //-----------------------------------
         return context;
     };
-    ConverterContext.prototype.createAnimation = function (label) {
-        var _a = this.global, skeleton = _a.skeleton, labels = _a.labels;
-        if (labels.indexOf(label) !== -1) {
-            this.global.animation = skeleton.createAnimation(label.name);
-            this.global.label = label;
-        }
-        return this;
-    };
     ConverterContext.prototype.createSlot = function (element) {
         var context = new ConverterContext();
         //-----------------------------------
@@ -287,6 +307,7 @@ var ConverterContext = /** @class */ (function () {
         context.parent = this;
         context.blendMode = ConvertUtil_1.ConvertUtil.obtainElementBlendMode(element);
         context.alpha = this.alpha;
+        context.layer = this.layer;
         context.element = element;
         context.frame = this.frame;
         if (this.blendMode !== "normal" /* SpineBlendMode.NORMAL */ && context.blendMode === "normal" /* SpineBlendMode.NORMAL */) {
@@ -297,6 +318,10 @@ var ConverterContext = /** @class */ (function () {
             context.slot.initialized = true;
             context.slot.color = NumberUtil_1.NumberUtil.colors(0xFFFFFF, context.alpha);
             context.slot.blend = context.blendMode;
+            if (context.layer != null) {
+                var layerSlots = context.global.layersCache.get(context.layer);
+                layerSlots.push(context.slot);
+            }
             if (context.frame !== 0) {
                 context.slot.color = NumberUtil_1.NumberUtil.colors(0xFFFFFF, 0);
                 SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, 0, 0);
@@ -356,6 +381,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         //-----------------------------------
         context.imagesCache = new ConverterMap_1.ConverterMap();
         context.shapesCache = new ConverterMap_1.ConverterMap();
+        context.layersCache = new ConverterMap_1.ConverterMap();
         context.global = context;
         context.parent = null;
         context.labels = ConvertUtil_1.ConvertUtil.obtainElementLabels(element);
@@ -370,6 +396,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.slot = null;
         context.blendMode = "normal" /* SpineBlendMode.NORMAL */;
         context.alpha = 1;
+        context.layer = null;
         context.element = element;
         context.frame = 0;
         //-----------------------------------
@@ -1148,9 +1175,7 @@ var SpineFormatV3_8_99 = /** @class */ (function () {
         var result = {};
         for (var _i = 0, _a = skeleton.slots; _i < _a.length; _i++) {
             var slot = _a[_i];
-            if (slot.attachment != null) {
-                result[slot.name] = this.convertSlotAttachments(slot);
-            }
+            result[slot.name] = this.convertSlotAttachments(slot);
         }
         return result;
     };
@@ -1703,6 +1728,10 @@ var JsonFormatUtil = /** @class */ (function () {
          */
         for (var key in source) {
             var value = source[key];
+            if (value == null && key === 'name') {
+                result[key] = null;
+                continue;
+            }
             if (JsonUtil_1.JsonUtil.validNumber(value)) {
                 if (key === 'color') {
                     result[key] = value.toString(16);

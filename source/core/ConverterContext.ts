@@ -15,6 +15,7 @@ export class ConverterContext {
 
     public alpha:number;
     public blendMode:SpineBlendMode;
+    public layer:FlashLayer;
     public element:FlashElement;
     public frame:number;
 
@@ -25,6 +26,31 @@ export class ConverterContext {
     public constructor() {
         // empty
     }
+
+    //-----------------------------------
+
+    public switchContextAnimation(label:ConverterFrameLabel):ConverterContext {
+        const { skeleton, labels } = this.global;
+
+        if (labels.indexOf(label) !== -1) {
+            this.global.animation = skeleton.createAnimation(label.name);
+            this.global.label = label;
+        }
+
+        return this;
+    }
+
+    public switchContextLayer(layer:FlashLayer):ConverterContext {
+        this.layer = layer;
+
+        if (this.global.layersCache.get(layer) == null) {
+            this.global.layersCache.set(layer, []);
+        }
+
+        return this;
+    }
+
+    //-----------------------------------
 
     public createBone(element:FlashElement, frame:number):ConverterContext {
         const context = new ConverterContext();
@@ -40,6 +66,7 @@ export class ConverterContext {
 
         context.blendMode = ConvertUtil.obtainElementBlendMode(element);
         context.alpha = this.alpha * ConvertUtil.obtainElementAlpha(element);
+        context.layer = this.layer;
         context.element = element;
         context.frame = frame;
 
@@ -72,17 +99,6 @@ export class ConverterContext {
         return context;
     }
 
-    public createAnimation(label:ConverterFrameLabel):ConverterContext {
-        const { skeleton, labels } = this.global;
-
-        if (labels.indexOf(label) !== -1) {
-            this.global.animation = skeleton.createAnimation(label.name);
-            this.global.label = label;
-        }
-
-        return this;
-    }
-
     public createSlot(element:FlashElement):ConverterContext {
         const context = new ConverterContext();
 
@@ -97,6 +113,7 @@ export class ConverterContext {
 
         context.blendMode = ConvertUtil.obtainElementBlendMode(element);
         context.alpha = this.alpha;
+        context.layer = this.layer;
         context.element = element;
         context.frame = this.frame;
 
@@ -111,6 +128,11 @@ export class ConverterContext {
 
             context.slot.color = NumberUtil.colors(0xFFFFFF, context.alpha);
             context.slot.blend = context.blendMode;
+
+            if (context.layer != null) {
+                const layerSlots = context.global.layersCache.get(context.layer);
+                layerSlots.push(context.slot);
+            }
 
             if (context.frame !== 0) {
                 context.slot.color = NumberUtil.colors(0xFFFFFF, 0);

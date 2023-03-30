@@ -132,7 +132,7 @@ export class Converter {
 
     private composeElementMaskLayer(context:ConverterContext, convertLayer:FlashLayer):void {
         this.convertElementLayer(
-            context, convertLayer,
+            context.switchContextLayer(convertLayer), convertLayer,
             (subcontext) => {
                 if (subcontext.element.elementType === 'shape') {
                     this.convertShapeMaskElementSlot(subcontext);
@@ -159,7 +159,7 @@ export class Converter {
 
     private convertCompositeElementLayer(context:ConverterContext, convertLayer:FlashLayer):void {
         this.convertElementLayer(
-            context, convertLayer,
+            context.switchContextLayer(convertLayer), convertLayer,
             (subcontext) => {
                 const { elementType, instanceType } = subcontext.element;
 
@@ -227,6 +227,23 @@ export class Converter {
                 continue;
             }
 
+            if (frame.elements.length === 0) {
+                const layerSlots = context.global.layersCache.get(context.layer);
+
+                if (layerSlots != null) {
+                    for (const slot of layerSlots) {
+                        SpineAnimationHelper.applySlotAttachment(
+                            context.global.animation,
+                            slot,
+                            null,
+                            frameTime
+                        );
+                    }
+                }
+
+                continue;
+            }
+
             for (const element of frame.elements) {
                 const subcontext = context.createBone(element, frameTime);
                 this._document.library.editItem(context.element.libraryItem.name);
@@ -268,7 +285,7 @@ export class Converter {
                 const { skeleton, labels } = context.global;
 
                 for (const label of labels) {
-                    const subcontext = context.createAnimation(label);
+                    const subcontext = context.switchContextAnimation(label);
                     this.convertElement(subcontext);
                 }
 

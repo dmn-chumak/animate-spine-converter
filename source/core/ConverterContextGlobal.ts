@@ -2,6 +2,7 @@ import { SpineAnimation } from '../spine/SpineAnimation';
 import { SpineAnimationHelper } from '../spine/SpineAnimationHelper';
 import { SpineImage } from '../spine/SpineImage';
 import { SpineSkeleton } from '../spine/SpineSkeleton';
+import { SpineSlot } from '../spine/SpineSlot';
 import { SpineTransformMatrix } from '../spine/transform/SpineTransformMatrix';
 import { SpineBlendMode } from '../spine/types/SpineBlendMode';
 import { ConvertUtil } from '../utils/ConvertUtil';
@@ -14,7 +15,8 @@ import { ConverterMap } from './ConverterMap';
 
 export class ConverterContextGlobal extends ConverterContext {
     public imagesCache:ConverterMap<string, SpineImage>;
-    public shapesCache:ConverterMap<any, string>;
+    public shapesCache:ConverterMap<FlashElement | FlashItem, string>;
+    public layersCache:ConverterMap<FlashLayer, SpineSlot[]>;
 
     public labels:ConverterFrameLabel[];
     public animation:SpineAnimation;
@@ -28,7 +30,8 @@ export class ConverterContextGlobal extends ConverterContext {
         //-----------------------------------
 
         context.imagesCache = new ConverterMap<string, SpineImage>();
-        context.shapesCache = new ConverterMap<any, string>();
+        context.shapesCache = new ConverterMap<FlashElement | FlashItem, string>();
+        context.layersCache = new ConverterMap<FlashLayer, SpineSlot[]>();
 
         context.global = context;
         context.parent = null;
@@ -49,6 +52,7 @@ export class ConverterContextGlobal extends ConverterContext {
 
         context.blendMode = SpineBlendMode.NORMAL;
         context.alpha = 1;
+        context.layer = null;
         context.element = element;
         context.frame = 0;
 

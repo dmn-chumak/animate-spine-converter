@@ -12,6 +12,11 @@ export class JsonFormatUtil {
         for (const key in source) {
             const value = source[key];
 
+            if (value == null && key === 'name') {
+                result[key] = null;
+                continue;
+            }
+
             if (JsonUtil.validNumber(value)) {
                 if (key === 'color') {
                     result[key] = (value as number).toString(16);
