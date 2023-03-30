@@ -283,7 +283,7 @@ var ConverterContext = /** @class */ (function () {
         context.alpha = this.alpha * ConvertUtil_1.ConvertUtil.obtainElementAlpha(element);
         context.layer = this.layer;
         context.element = element;
-        context.frame = frame;
+        context.frame = this.frame + frame;
         if (this.blendMode !== "normal" /* SpineBlendMode.NORMAL */ && context.blendMode === "normal" /* SpineBlendMode.NORMAL */) {
             context.blendMode = this.blendMode;
         }
@@ -323,8 +323,7 @@ var ConverterContext = /** @class */ (function () {
                 layerSlots.push(context.slot);
             }
             if (context.frame !== 0) {
-                context.slot.color = NumberUtil_1.NumberUtil.colors(0xFFFFFF, 0);
-                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, 0, 0);
+                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, context.slot, null, 0);
             }
         }
         SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context.alpha, context.frame);

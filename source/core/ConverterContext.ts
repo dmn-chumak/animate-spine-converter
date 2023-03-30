@@ -68,7 +68,7 @@ export class ConverterContext {
         context.alpha = this.alpha * ConvertUtil.obtainElementAlpha(element);
         context.layer = this.layer;
         context.element = element;
-        context.frame = frame;
+        context.frame = this.frame + frame;
 
         if (this.blendMode !== SpineBlendMode.NORMAL && context.blendMode === SpineBlendMode.NORMAL) {
             context.blendMode = this.blendMode;
@@ -135,12 +135,10 @@ export class ConverterContext {
             }
 
             if (context.frame !== 0) {
-                context.slot.color = NumberUtil.colors(0xFFFFFF, 0);
-
-                SpineAnimationHelper.applySlotAnimation(
+                SpineAnimationHelper.applySlotAttachment(
                     context.global.animation,
                     context.slot,
-                    0,
+                    null,
                     0
                 );
             }
