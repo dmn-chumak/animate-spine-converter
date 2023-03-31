@@ -1,0 +1,28 @@
+body {
+    margin: 0;
+    padding: 10px;
+}
+
+.examples {
+    flex-flow: row wrap;
+    display: flex;
+}
+
+.examples div {
+    border: 3px solid #000000;
+    height: 300px;
+    margin-inline-end: 10px;
+    width: 300px;
+}
+
+ruffle-player {
+    height: 300px;
+    width: 300px;
+}
+
+hr {
+    border: none;
+    background: #999999;
+    margin: 10px 0;
+    height: 3px;
+}

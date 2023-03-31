@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+        <script src="https://pixijs.download/release/pixi.js"></script>
+        <script src="https://unpkg.com/pixi-spine/dist/pixi-spine.js"></script>
+        <script src="./script.js"></script>
+
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="./style.css" />
+        <title>Examples</title>
+    </head>
+    <body>
+        <div class="examples">
+            <div id="hero_flash"></div>
+            <div id="hero_spine"></div>
+        </div>
+
+        <hr />
+
+        <div class="examples">
+            <div id="tint_flash"></div>
+            <div id="tint_spine"></div>
+        </div>
+
+        <script>
+            window.onload = () => {
+                createRuffleConfig();
+
+                (async () => {
+                    Promise.all([
+                        createSpinePlayer('hero_spine', './hero/example_hero.json', 200),
+                        createFlashPlayer('hero_flash', './hero/example_hero.swf')
+                    ]).then(([ player1, player2 ]) => {
+                        player1.play();
+                        player2.play();
+                    });
+                })();
+
+                (async () => {
+                    Promise.all([
+                        createSpinePlayer('tint_spine', './tint/example_tint.json', 0),
+                        createFlashPlayer('tint_flash', './tint/example_tint.swf')
+                    ]).then(([ player1, player2 ]) => {
+                        player1.play();
+                        player2.play();
+                    });
+                })();
+            };
+        </script>
+    </body>
+</html>
