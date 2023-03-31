@@ -12,7 +12,7 @@ export class JsonFormatUtil {
         for (const key in source) {
             const value = source[key];
 
-            if (value == null && key === 'name') {
+            if (value === null && key === 'name') {
                 result[key] = null;
                 continue;
             }

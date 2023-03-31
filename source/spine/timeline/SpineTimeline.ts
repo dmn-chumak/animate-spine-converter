@@ -1,4 +1,5 @@
 import { SpineTimelineType } from '../types/SpineTimelineType';
+import { SpineCurveType } from './SpineCurveType';
 import { SpineTimelineFrame } from './SpineTimelineFrame';
 
 export class SpineTimeline {
@@ -10,7 +11,7 @@ export class SpineTimeline {
         this.frames = [];
     }
 
-    public createFrame(time:number, unique:boolean = true):SpineTimelineFrame {
+    public createFrame(time:number, curve:SpineCurveType, unique:boolean = true):SpineTimelineFrame {
         let frame = this.findFrame(time);
 
         if (frame != null && unique) {
@@ -18,6 +19,7 @@ export class SpineTimeline {
         }
 
         frame = new SpineTimelineFrame();
+        frame.curve = curve;
         frame.time = time;
         this.frames.push(frame);
 

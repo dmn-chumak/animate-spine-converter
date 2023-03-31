@@ -21,12 +21,10 @@ export class Converter {
     private readonly _document:FlashDocument;
     private readonly _workingPath:string;
     private readonly _config:ConverterConfig;
-    private readonly _frameRate:number;
 
     public constructor(document:FlashDocument, config:ConverterConfig) {
         this._document = document;
         this._workingPath = PathUtil.parentPath(document.pathURI);
-        this._frameRate = document.frameRate;
         this._config = config;
     }
 
@@ -73,8 +71,9 @@ export class Converter {
         SpineAnimationHelper.applySlotAttachment(
             context.global.animation,
             slot,
+            context.frame,
             attachment,
-            context.frame
+            context.time
         );
     }
 
@@ -114,8 +113,9 @@ export class Converter {
         SpineAnimationHelper.applySlotAttachment(
             context.global.animation,
             slot,
+            context.frame,
             attachment,
-            context.frame
+            context.time
         );
     }
 
@@ -220,7 +220,7 @@ export class Converter {
         }
 
         for (let frameIdx = startFrameIdx; frameIdx <= endFrameIdx; frameIdx++) {
-            const frameTime = (frameIdx - startFrameIdx) / this._frameRate;
+            const frameTime = (frameIdx - startFrameIdx) / context.global.frameRate;
             const frame = frames[frameIdx];
 
             if (frame == null || frame.startFrame !== frameIdx) {
@@ -231,10 +231,13 @@ export class Converter {
                 const layerSlots = context.global.layersCache.get(context.layer);
 
                 if (layerSlots != null) {
+                    const subcontext = context.switchContextFrame(frame);
+
                     for (const slot of layerSlots) {
                         SpineAnimationHelper.applySlotAttachment(
-                            context.global.animation,
+                            subcontext.global.animation,
                             slot,
+                            subcontext.frame,
                             null,
                             frameTime
                         );
@@ -245,7 +248,7 @@ export class Converter {
             }
 
             for (const element of frame.elements) {
-                const subcontext = context.createBone(element, frameTime);
+                const subcontext = context.switchContextFrame(frame).createBone(element, frameTime);
                 this._document.library.editItem(context.element.libraryItem.name);
                 this._document.getTimeline().currentFrame = frame.startFrame;
                 layerConvertFactory(subcontext);
@@ -281,7 +284,7 @@ export class Converter {
     public convertSymbolInstance(element:FlashElement):SpineSkeleton {
         if (element.elementType === 'instance' && element.instanceType === 'symbol') {
             try {
-                const context = ConverterContextGlobal.initialize(element, this._config);
+                const context = ConverterContextGlobal.initialize(element, this._config, this._document.frameRate);
                 const { skeleton, labels } = context.global;
 
                 for (const label of labels) {

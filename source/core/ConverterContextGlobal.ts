@@ -22,8 +22,9 @@ export class ConverterContextGlobal extends ConverterContext {
     public animation:SpineAnimation;
     public label:ConverterFrameLabel;
     public skeleton:SpineSkeleton;
+    public frameRate:number;
 
-    public static initialize(element:FlashElement, config:ConverterConfig):ConverterContext {
+    public static initialize(element:FlashElement, config:ConverterConfig, frameRate:number):ConverterContext {
         const context = new ConverterContextGlobal();
         const name = StringUtil.simplify(element.libraryItem.name);
 
@@ -38,6 +39,7 @@ export class ConverterContextGlobal extends ConverterContext {
 
         context.labels = ConvertUtil.obtainElementLabels(element);
         context.animation = null;
+        context.frameRate = frameRate;
         context.label = null;
 
         //-----------------------------------
@@ -54,7 +56,8 @@ export class ConverterContextGlobal extends ConverterContext {
         context.alpha = 1;
         context.layer = null;
         context.element = element;
-        context.frame = 0;
+        context.frame = null;
+        context.time = 0;
 
         //-----------------------------------
 

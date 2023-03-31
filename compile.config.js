@@ -44,7 +44,7 @@ compiler.run((err, stats) => {
 
     if (err || stats.hasErrors()) {
         console.error('Error occurred:');
-        console.error(err);
+        console.error(stats.toString({ colors: true }));
         return;
     }
 

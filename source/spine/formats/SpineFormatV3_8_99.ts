@@ -64,6 +64,7 @@ export class SpineFormatV3_8_99 implements SpineFormat {
     public convertTimelineFrame(frame:SpineTimelineFrame):any {
         return JsonFormatUtil.cleanObject({
             time: frame.time,
+            curve: frame.curve,
             angle: frame.angle,
             name: frame.name,
             color: frame.color,
@@ -73,10 +74,18 @@ export class SpineFormatV3_8_99 implements SpineFormat {
     }
 
     public convertTimeline(timeline:SpineTimeline):any[] {
+        const length = timeline.frames.length;
         const result:any[] = [];
 
-        for (const frame of timeline.frames) {
-            result.push(this.convertTimelineFrame(frame));
+        for (let index = 0; index < length; index++) {
+            const frame = this.convertTimelineFrame(timeline.frames[index]);
+
+            if (index === (length - 1)) {
+                // last frame cannot contain curve property
+                delete frame.curve;
+            }
+
+            result.push(frame);
         }
 
         return result;

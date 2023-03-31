@@ -25,7 +25,6 @@ var Converter = /** @class */ (function () {
     function Converter(document, config) {
         this._document = document;
         this._workingPath = PathUtil_1.PathUtil.parentPath(document.pathURI);
-        this._frameRate = document.frameRate;
         this._config = config;
     }
     //-----------------------------------
@@ -56,7 +55,7 @@ var Converter = /** @class */ (function () {
         attachment.x = spineImage.x;
         attachment.y = spineImage.y;
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, attachment, context.frame);
+        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context.frame, attachment, context.time);
     };
     //-----------------------------------
     Converter.prototype.convertBitmapElementSlot = function (context) {
@@ -80,7 +79,7 @@ var Converter = /** @class */ (function () {
         attachment.vertexCount = attachment.vertices.length / 2;
         attachment.end = context.global.skeleton.findSlot(slot.name);
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, attachment, context.frame);
+        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context.frame, attachment, context.time);
     };
     Converter.prototype.convertShapeElementSlot = function (context) {
         var _this = this;
@@ -156,7 +155,7 @@ var Converter = /** @class */ (function () {
             endFrameIdx = frames.length - 1;
         }
         for (var frameIdx = startFrameIdx; frameIdx <= endFrameIdx; frameIdx++) {
-            var frameTime = (frameIdx - startFrameIdx) / this._frameRate;
+            var frameTime = (frameIdx - startFrameIdx) / context.global.frameRate;
             var frame = frames[frameIdx];
             if (frame == null || frame.startFrame !== frameIdx) {
                 continue;
@@ -164,16 +163,17 @@ var Converter = /** @class */ (function () {
             if (frame.elements.length === 0) {
                 var layerSlots = context.global.layersCache.get(context.layer);
                 if (layerSlots != null) {
+                    var subcontext = context.switchContextFrame(frame);
                     for (var _i = 0, layerSlots_1 = layerSlots; _i < layerSlots_1.length; _i++) {
                         var slot = layerSlots_1[_i];
-                        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, null, frameTime);
+                        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(subcontext.global.animation, slot, subcontext.frame, null, frameTime);
                     }
                 }
                 continue;
             }
             for (var _b = 0, _c = frame.elements; _b < _c.length; _b++) {
                 var element = _c[_b];
-                var subcontext = context.createBone(element, frameTime);
+                var subcontext = context.switchContextFrame(frame).createBone(element, frameTime);
                 this._document.library.editItem(context.element.libraryItem.name);
                 this._document.getTimeline().currentFrame = frame.startFrame;
                 layerConvertFactory(subcontext);
@@ -203,7 +203,7 @@ var Converter = /** @class */ (function () {
     Converter.prototype.convertSymbolInstance = function (element) {
         if (element.elementType === 'instance' && element.instanceType === 'symbol') {
             try {
-                var context = ConverterContextGlobal_1.ConverterContextGlobal.initialize(element, this._config);
+                var context = ConverterContextGlobal_1.ConverterContextGlobal.initialize(element, this._config, this._document.frameRate);
                 var _a = context.global, skeleton = _a.skeleton, labels = _a.labels;
                 for (var _i = 0, labels_1 = labels; _i < labels_1.length; _i++) {
                     var label = labels_1[_i];
@@ -255,6 +255,10 @@ var ConverterContext = /** @class */ (function () {
         // empty
     }
     //-----------------------------------
+    ConverterContext.prototype.switchContextFrame = function (frame) {
+        this.frame = frame;
+        return this;
+    };
     ConverterContext.prototype.switchContextAnimation = function (label) {
         var _a = this.global, skeleton = _a.skeleton, labels = _a.labels;
         if (labels.indexOf(label) !== -1) {
@@ -271,29 +275,31 @@ var ConverterContext = /** @class */ (function () {
         return this;
     };
     //-----------------------------------
-    ConverterContext.prototype.createBone = function (element, frame) {
+    ConverterContext.prototype.createBone = function (element, time) {
+        var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         var context = new ConverterContext();
         //-----------------------------------
         context.bone = this.global.skeleton.createBone(ConvertUtil_1.ConvertUtil.createBoneName(element, this), this.bone.name);
         context.clipping = this.clipping;
         context.slot = null;
+        context.time = this.time + time;
         context.global = this.global;
         context.parent = this;
         context.blendMode = ConvertUtil_1.ConvertUtil.obtainElementBlendMode(element);
         context.alpha = this.alpha * ConvertUtil_1.ConvertUtil.obtainElementAlpha(element);
         context.layer = this.layer;
         context.element = element;
-        context.frame = this.frame + frame;
+        context.frame = this.frame;
         if (this.blendMode !== "normal" /* SpineBlendMode.NORMAL */ && context.blendMode === "normal" /* SpineBlendMode.NORMAL */) {
             context.blendMode = this.blendMode;
         }
         //-----------------------------------
-        var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         if (context.bone.initialized === false) {
             context.bone.initialized = true;
             SpineAnimationHelper_1.SpineAnimationHelper.applyBoneTransform(context.bone, transform);
         }
-        SpineAnimationHelper_1.SpineAnimationHelper.applyBoneAnimation(context.global.animation, context.bone, transform, context.frame);
+        //-----------------------------------
+        SpineAnimationHelper_1.SpineAnimationHelper.applyBoneAnimation(context.global.animation, context.bone, context.frame, transform, context.time);
         //-----------------------------------
         return context;
     };
@@ -303,6 +309,7 @@ var ConverterContext = /** @class */ (function () {
         context.bone = this.bone;
         context.clipping = this.clipping;
         context.slot = this.global.skeleton.createSlot(this.bone.name + '_slot', this.bone.name);
+        context.time = this.time;
         context.global = this.global;
         context.parent = this;
         context.blendMode = ConvertUtil_1.ConvertUtil.obtainElementBlendMode(element);
@@ -322,11 +329,12 @@ var ConverterContext = /** @class */ (function () {
                 var layerSlots = context.global.layersCache.get(context.layer);
                 layerSlots.push(context.slot);
             }
-            if (context.frame !== 0) {
-                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, context.slot, null, 0);
+            if (context.time !== 0) {
+                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, context.slot, context.frame, null, 0);
             }
         }
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context.alpha, context.frame);
+        //-----------------------------------
+        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context.frame, context.alpha, context.time);
         //-----------------------------------
         return context;
     };
@@ -374,7 +382,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
     function ConverterContextGlobal() {
         return _super.call(this) || this;
     }
-    ConverterContextGlobal.initialize = function (element, config) {
+    ConverterContextGlobal.initialize = function (element, config, frameRate) {
         var context = new ConverterContextGlobal();
         var name = StringUtil_1.StringUtil.simplify(element.libraryItem.name);
         //-----------------------------------
@@ -385,6 +393,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.parent = null;
         context.labels = ConvertUtil_1.ConvertUtil.obtainElementLabels(element);
         context.animation = null;
+        context.frameRate = frameRate;
         context.label = null;
         //-----------------------------------
         context.skeleton = new SpineSkeleton_1.SpineSkeleton();
@@ -397,7 +406,8 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.alpha = 1;
         context.layer = null;
         context.element = element;
-        context.frame = 0;
+        context.frame = null;
+        context.time = 0;
         //-----------------------------------
         var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         if (config.transformRootBone) {
@@ -530,7 +540,7 @@ var SpineAnimation = /** @class */ (function () {
         return timeline;
     };
     SpineAnimation.prototype.createEvent = function (name, time) {
-        this.events.createFrame(time, false).name = name;
+        this.events.createFrame(time, null, false).name = name;
     };
     SpineAnimation.prototype.createSlotTimeline = function (slot) {
         var timeline = this.findSlotTimeline(slot);
@@ -581,21 +591,22 @@ var NumberUtil_1 = __webpack_require__(/*! ../utils/NumberUtil */ "./source/util
 var SpineAnimationHelper = /** @class */ (function () {
     function SpineAnimationHelper() {
     }
-    SpineAnimationHelper.applyBoneAnimation = function (animation, bone, transform, time) {
+    SpineAnimationHelper.applyBoneAnimation = function (animation, bone, frame, transform, time) {
         var timeline = animation.createBoneTimeline(bone);
+        var curve = SpineAnimationHelper.obtainFrameCurve(frame);
         var rotateTimeline = timeline.createTimeline("rotate" /* SpineTimelineType.ROTATE */);
-        var rotateFrame = rotateTimeline.createFrame(time);
+        var rotateFrame = rotateTimeline.createFrame(time, curve);
         rotateFrame.angle = transform.rotation - bone.rotation;
         var translateTimeline = timeline.createTimeline("translate" /* SpineTimelineType.TRANSLATE */);
-        var translateFrame = translateTimeline.createFrame(time);
+        var translateFrame = translateTimeline.createFrame(time, curve);
         translateFrame.x = transform.x - bone.x;
         translateFrame.y = transform.y - bone.y;
         var scaleTimeline = timeline.createTimeline("scale" /* SpineTimelineType.SCALE */);
-        var scaleFrame = scaleTimeline.createFrame(time);
+        var scaleFrame = scaleTimeline.createFrame(time, curve);
         scaleFrame.x = transform.scaleX / bone.scaleX;
         scaleFrame.y = transform.scaleY / bone.scaleY;
         var shearTimeline = timeline.createTimeline("shear" /* SpineTimelineType.SHEAR */);
-        var shearFrame = shearTimeline.createFrame(time);
+        var shearFrame = shearTimeline.createFrame(time, curve);
         shearFrame.x = transform.shearX - bone.shearX;
         shearFrame.y = transform.shearY - bone.shearY;
     };
@@ -608,20 +619,28 @@ var SpineAnimationHelper = /** @class */ (function () {
         bone.shearX = transform.shearX;
         bone.shearY = transform.shearY;
     };
-    SpineAnimationHelper.applySlotAttachment = function (animation, slot, attachment, time) {
+    SpineAnimationHelper.applySlotAttachment = function (animation, slot, frame, attachment, time) {
         var timeline = animation.createSlotTimeline(slot);
+        var curve = SpineAnimationHelper.obtainFrameCurve(frame);
         var attachmentTimeline = timeline.createTimeline("attachment" /* SpineTimelineType.ATTACHMENT */);
-        var attachmentFrame = attachmentTimeline.createFrame(time);
+        var attachmentFrame = attachmentTimeline.createFrame(time, curve);
         attachmentFrame.name = (attachment != null) ? attachment.name : null;
         if (time === 0) {
             slot.attachment = attachment;
         }
     };
-    SpineAnimationHelper.applySlotAnimation = function (animation, slot, alpha, time) {
+    SpineAnimationHelper.applySlotAnimation = function (animation, slot, frame, alpha, time) {
         var timeline = animation.createSlotTimeline(slot);
+        var curve = SpineAnimationHelper.obtainFrameCurve(frame);
         var colorTimeline = timeline.createTimeline("color" /* SpineTimelineType.COLOR */);
-        var colorFrame = colorTimeline.createFrame(time);
+        var colorFrame = colorTimeline.createFrame(time, curve);
         colorFrame.color = NumberUtil_1.NumberUtil.colors(0xFFFFFF, alpha);
+    };
+    SpineAnimationHelper.obtainFrameCurve = function (frame) {
+        if (frame != null) {
+            return (frame.tweenType === 'none') ? 'stepped' : null;
+        }
+        return null;
     };
     return SpineAnimationHelper;
 }());
@@ -1026,6 +1045,7 @@ var SpineFormatV3_8_99 = /** @class */ (function () {
     SpineFormatV3_8_99.prototype.convertTimelineFrame = function (frame) {
         return JsonFormatUtil_1.JsonFormatUtil.cleanObject({
             time: frame.time,
+            curve: frame.curve,
             angle: frame.angle,
             name: frame.name,
             color: frame.color,
@@ -1034,10 +1054,15 @@ var SpineFormatV3_8_99 = /** @class */ (function () {
         });
     };
     SpineFormatV3_8_99.prototype.convertTimeline = function (timeline) {
+        var length = timeline.frames.length;
         var result = [];
-        for (var _i = 0, _a = timeline.frames; _i < _a.length; _i++) {
-            var frame = _a[_i];
-            result.push(this.convertTimelineFrame(frame));
+        for (var index = 0; index < length; index++) {
+            var frame = this.convertTimelineFrame(timeline.frames[index]);
+            if (index === (length - 1)) {
+                // last frame cannot contain curve property
+                delete frame.curve;
+            }
+            result.push(frame);
         }
         return result;
     };
@@ -1218,13 +1243,14 @@ var SpineTimeline = /** @class */ (function () {
     function SpineTimeline() {
         this.frames = [];
     }
-    SpineTimeline.prototype.createFrame = function (time, unique) {
+    SpineTimeline.prototype.createFrame = function (time, curve, unique) {
         if (unique === void 0) { unique = true; }
         var frame = this.findFrame(time);
         if (frame != null && unique) {
             return frame;
         }
         frame = new SpineTimelineFrame_1.SpineTimelineFrame();
+        frame.curve = curve;
         frame.time = time;
         this.frames.push(frame);
         return frame;
@@ -1727,7 +1753,7 @@ var JsonFormatUtil = /** @class */ (function () {
          */
         for (var key in source) {
             var value = source[key];
-            if (value == null && key === 'name') {
+            if (value === null && key === 'name') {
                 result[key] = null;
                 continue;
             }

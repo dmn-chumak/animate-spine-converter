@@ -17,17 +17,24 @@ export class ConverterContext {
     public blendMode:SpineBlendMode;
     public layer:FlashLayer;
     public element:FlashElement;
-    public frame:number;
+    public frame:FlashFrame;
 
     public bone:SpineBone;
     public clipping:SpineClippingAttachment;
     public slot:SpineSlot;
+    public time:number;
 
     public constructor() {
         // empty
     }
 
     //-----------------------------------
+
+    public switchContextFrame(frame:FlashFrame):ConverterContext {
+        this.frame = frame;
+
+        return this;
+    }
 
     public switchContextAnimation(label:ConverterFrameLabel):ConverterContext {
         const { skeleton, labels } = this.global;
@@ -52,7 +59,8 @@ export class ConverterContext {
 
     //-----------------------------------
 
-    public createBone(element:FlashElement, frame:number):ConverterContext {
+    public createBone(element:FlashElement, time:number):ConverterContext {
+        const transform = new SpineTransformMatrix(element);
         const context = new ConverterContext();
 
         //-----------------------------------
@@ -60,6 +68,7 @@ export class ConverterContext {
         context.bone = this.global.skeleton.createBone(ConvertUtil.createBoneName(element, this), this.bone.name);
         context.clipping = this.clipping;
         context.slot = null;
+        context.time = this.time + time;
 
         context.global = this.global;
         context.parent = this;
@@ -68,15 +77,13 @@ export class ConverterContext {
         context.alpha = this.alpha * ConvertUtil.obtainElementAlpha(element);
         context.layer = this.layer;
         context.element = element;
-        context.frame = this.frame + frame;
+        context.frame = this.frame;
 
         if (this.blendMode !== SpineBlendMode.NORMAL && context.blendMode === SpineBlendMode.NORMAL) {
             context.blendMode = this.blendMode;
         }
 
         //-----------------------------------
-
-        const transform = new SpineTransformMatrix(element);
 
         if (context.bone.initialized === false) {
             context.bone.initialized = true;
@@ -87,11 +94,14 @@ export class ConverterContext {
             );
         }
 
+        //-----------------------------------
+
         SpineAnimationHelper.applyBoneAnimation(
             context.global.animation,
             context.bone,
+            context.frame,
             transform,
-            context.frame
+            context.time
         );
 
         //-----------------------------------
@@ -107,6 +117,7 @@ export class ConverterContext {
         context.bone = this.bone;
         context.clipping = this.clipping;
         context.slot = this.global.skeleton.createSlot(this.bone.name + '_slot', this.bone.name);
+        context.time = this.time;
 
         context.global = this.global;
         context.parent = this;
@@ -134,21 +145,25 @@ export class ConverterContext {
                 layerSlots.push(context.slot);
             }
 
-            if (context.frame !== 0) {
+            if (context.time !== 0) {
                 SpineAnimationHelper.applySlotAttachment(
                     context.global.animation,
                     context.slot,
+                    context.frame,
                     null,
                     0
                 );
             }
         }
 
+        //-----------------------------------
+
         SpineAnimationHelper.applySlotAnimation(
             context.global.animation,
             context.slot,
+            context.frame,
             context.alpha,
-            context.frame
+            context.time
         );
 
         //-----------------------------------

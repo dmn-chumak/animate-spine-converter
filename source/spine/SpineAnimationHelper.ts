@@ -3,29 +3,31 @@ import { SpineAttachment } from './attachment/SpineAttachment';
 import { SpineAnimation } from './SpineAnimation';
 import { SpineBone } from './SpineBone';
 import { SpineSlot } from './SpineSlot';
+import { SpineCurveType } from './timeline/SpineCurveType';
 import { SpineTransform } from './transform/SpineTransform';
 import { SpineTimelineType } from './types/SpineTimelineType';
 
 export class SpineAnimationHelper {
-    public static applyBoneAnimation(animation:SpineAnimation, bone:SpineBone, transform:SpineTransform, time:number):void {
+    public static applyBoneAnimation(animation:SpineAnimation, bone:SpineBone, frame:FlashFrame, transform:SpineTransform, time:number):void {
         const timeline = animation.createBoneTimeline(bone);
+        const curve = SpineAnimationHelper.obtainFrameCurve(frame);
 
         const rotateTimeline = timeline.createTimeline(SpineTimelineType.ROTATE);
-        const rotateFrame = rotateTimeline.createFrame(time);
+        const rotateFrame = rotateTimeline.createFrame(time, curve);
         rotateFrame.angle = transform.rotation - bone.rotation;
 
         const translateTimeline = timeline.createTimeline(SpineTimelineType.TRANSLATE);
-        const translateFrame = translateTimeline.createFrame(time);
+        const translateFrame = translateTimeline.createFrame(time, curve);
         translateFrame.x = transform.x - bone.x;
         translateFrame.y = transform.y - bone.y;
 
         const scaleTimeline = timeline.createTimeline(SpineTimelineType.SCALE);
-        const scaleFrame = scaleTimeline.createFrame(time);
+        const scaleFrame = scaleTimeline.createFrame(time, curve);
         scaleFrame.x = transform.scaleX / bone.scaleX;
         scaleFrame.y = transform.scaleY / bone.scaleY;
 
         const shearTimeline = timeline.createTimeline(SpineTimelineType.SHEAR);
-        const shearFrame = shearTimeline.createFrame(time);
+        const shearFrame = shearTimeline.createFrame(time, curve);
         shearFrame.x = transform.shearX - bone.shearX;
         shearFrame.y = transform.shearY - bone.shearY;
     }
@@ -40,11 +42,12 @@ export class SpineAnimationHelper {
         bone.shearY = transform.shearY;
     }
 
-    public static applySlotAttachment(animation:SpineAnimation, slot:SpineSlot, attachment:SpineAttachment, time:number):void {
+    public static applySlotAttachment(animation:SpineAnimation, slot:SpineSlot, frame:FlashFrame, attachment:SpineAttachment, time:number):void {
         const timeline = animation.createSlotTimeline(slot);
+        const curve = SpineAnimationHelper.obtainFrameCurve(frame);
 
         const attachmentTimeline = timeline.createTimeline(SpineTimelineType.ATTACHMENT);
-        const attachmentFrame = attachmentTimeline.createFrame(time);
+        const attachmentFrame = attachmentTimeline.createFrame(time, curve);
         attachmentFrame.name = (attachment != null) ? attachment.name : null;
 
         if (time === 0) {
@@ -52,11 +55,20 @@ export class SpineAnimationHelper {
         }
     }
 
-    public static applySlotAnimation(animation:SpineAnimation, slot:SpineSlot, alpha:number, time:number):void {
+    public static applySlotAnimation(animation:SpineAnimation, slot:SpineSlot, frame:FlashFrame, alpha:number, time:number):void {
         const timeline = animation.createSlotTimeline(slot);
+        const curve = SpineAnimationHelper.obtainFrameCurve(frame);
 
         const colorTimeline = timeline.createTimeline(SpineTimelineType.COLOR);
-        const colorFrame = colorTimeline.createFrame(time);
+        const colorFrame = colorTimeline.createFrame(time, curve);
         colorFrame.color = NumberUtil.colors(0xFFFFFF, alpha);
+    }
+
+    public static obtainFrameCurve(frame:FlashFrame):SpineCurveType {
+        if (frame != null) {
+            return (frame.tweenType === 'none') ? 'stepped' : null;
+        }
+
+        return null;
     }
 }

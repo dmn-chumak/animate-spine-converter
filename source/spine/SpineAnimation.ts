@@ -34,7 +34,7 @@ export class SpineAnimation {
     }
 
     public createEvent(name:string, time:number):void {
-        this.events.createFrame(time, false).name = name;
+        this.events.createFrame(time, null, false).name = name;
     }
 
     public createSlotTimeline(slot:SpineSlot):SpineTimelineGroupSlot {
