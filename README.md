@@ -7,10 +7,12 @@ A simple JSFL script that converts basic Adobe Animate (Adobe Flash) animations 
 - supports v3.8.99, v4.0.64 and v.4.1.19 formats;
 - auto-export shapes, text fields and bitmaps;
 - auto-merge simple MovieClips into a single Spine slot;
+- auto-cleanup unnecessary keyframes to reduce output size;
 - basic shape masks (rectangles, circles, polygons);
 - blend modes (normal, add, multiply, screen);
-- basic bitmap sequence animations;
+- basic bitmap sequence animations (each bitmap should have the same width/height);
 - basic transform animations (position, scale, skew, rotation);
+- basic color effects parsing and animating (tint, brightness, etc);
 - basic transparency animation;
 - split timeline into multiple animations.
 
