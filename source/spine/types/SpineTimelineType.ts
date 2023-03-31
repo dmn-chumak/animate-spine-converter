@@ -5,5 +5,5 @@ export const enum SpineTimelineType {
     SHEAR = 'shear',
 
     ATTACHMENT = 'attachment',
-    COLOR = 'color',
+    COLOR = 'color'
 }

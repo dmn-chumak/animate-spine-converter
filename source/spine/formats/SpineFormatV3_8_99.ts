@@ -13,12 +13,14 @@ import { SpineTimelineFrame } from '../timeline/SpineTimelineFrame';
 import { SpineTimelineGroup } from '../timeline/SpineTimelineGroup';
 import { SpineAttachmentType } from '../types/SpineAttachmentType';
 import { SpineFormat } from './SpineFormat';
+import { SpineFormatOptimizer } from './SpineFormatOptimizer';
 
 export class SpineFormatV3_8_99 implements SpineFormat {
+    public readonly optimizer:SpineFormatOptimizer;
     public readonly version:string = '3.8.99';
 
     public constructor() {
-        // empty
+        this.optimizer = new SpineFormatOptimizer();
     }
 
     //-----------------------------------
@@ -114,6 +116,8 @@ export class SpineFormatV3_8_99 implements SpineFormat {
     }
 
     public convertTimelineGroup(group:SpineTimelineGroup):any {
+        this.optimizer.optimizeTimeline(group);
+
         const result:any = {};
 
         for (const timeline of group.timelines) {

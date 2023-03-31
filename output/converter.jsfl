@@ -1005,6 +1005,81 @@ exports.SpineRegionAttachment = SpineRegionAttachment;
 
 /***/ }),
 
+/***/ "./source/spine/formats/SpineFormatOptimizer.ts":
+/*!******************************************************!*\
+  !*** ./source/spine/formats/SpineFormatOptimizer.ts ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports) {
+
+
+
+exports.SpineFormatOptimizer = void 0;
+var SpineFormatOptimizer = /** @class */ (function () {
+    function SpineFormatOptimizer() {
+        var _a;
+        this._frameCheckersMap = (_a = {},
+            _a["attachment" /* SpineTimelineType.ATTACHMENT */] = this.isEmptyAttachmentFrame,
+            _a["color" /* SpineTimelineType.COLOR */] = this.isEmptyColorFrame,
+            _a["rotate" /* SpineTimelineType.ROTATE */] = this.isEmptyRotateFrame,
+            _a["translate" /* SpineTimelineType.TRANSLATE */] = this.isEmptyTranslateFrame,
+            _a["scale" /* SpineTimelineType.SCALE */] = this.isEmptyScaleFrame,
+            _a["shear" /* SpineTimelineType.SHEAR */] = this.isEmptyShearFrame,
+            _a);
+    }
+    //-----------------------------------
+    SpineFormatOptimizer.prototype.isEmptyRotateFrame = function (group, frame) {
+        return (frame.angle === 0);
+    };
+    SpineFormatOptimizer.prototype.isEmptyTranslateFrame = function (group, frame) {
+        return (frame.x === 0 && frame.y === 0);
+    };
+    SpineFormatOptimizer.prototype.isEmptyScaleFrame = function (group, frame) {
+        return (frame.x === 1 && frame.y === 1);
+    };
+    SpineFormatOptimizer.prototype.isEmptyShearFrame = function (group, frame) {
+        return (frame.x === 0 && frame.y === 0);
+    };
+    SpineFormatOptimizer.prototype.isEmptyAttachmentFrame = function (group, frame) {
+        if (group.slot.attachment != null) {
+            return (frame.name === group.slot.attachment.name);
+        }
+        return (frame.name == null);
+    };
+    SpineFormatOptimizer.prototype.isEmptyColorFrame = function (group, frame) {
+        return (group.slot.color === frame.color);
+    };
+    //-----------------------------------
+    SpineFormatOptimizer.prototype.isEmptyTimeline = function (group, timeline) {
+        var checker = this._frameCheckersMap[timeline.type];
+        if (checker != null) {
+            for (var _i = 0, _a = timeline.frames; _i < _a.length; _i++) {
+                var frame = _a[_i];
+                if (checker(group, frame) === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+    //-----------------------------------
+    SpineFormatOptimizer.prototype.optimizeTimeline = function (group) {
+        var timelines = group.timelines;
+        for (var index = 0; index < timelines.length; index++) {
+            var timeline = timelines[index];
+            if (this.isEmptyTimeline(group, timeline)) {
+                timelines.splice(index, 1);
+                index--;
+            }
+        }
+    };
+    return SpineFormatOptimizer;
+}());
+exports.SpineFormatOptimizer = SpineFormatOptimizer;
+
+
+/***/ }),
+
 /***/ "./source/spine/formats/SpineFormatV3_8_99.ts":
 /*!****************************************************!*\
   !*** ./source/spine/formats/SpineFormatV3_8_99.ts ***!
@@ -1026,10 +1101,11 @@ var __assign = (this && this.__assign) || function () {
 
 exports.SpineFormatV3_8_99 = void 0;
 var JsonFormatUtil_1 = __webpack_require__(/*! ../../utils/JsonFormatUtil */ "./source/utils/JsonFormatUtil.ts");
+var SpineFormatOptimizer_1 = __webpack_require__(/*! ./SpineFormatOptimizer */ "./source/spine/formats/SpineFormatOptimizer.ts");
 var SpineFormatV3_8_99 = /** @class */ (function () {
     function SpineFormatV3_8_99() {
         this.version = '3.8.99';
-        // empty
+        this.optimizer = new SpineFormatOptimizer_1.SpineFormatOptimizer();
     }
     //-----------------------------------
     SpineFormatV3_8_99.prototype.convertSkeleton = function (skeleton) {
@@ -1098,6 +1174,7 @@ var SpineFormatV3_8_99 = /** @class */ (function () {
         return result;
     };
     SpineFormatV3_8_99.prototype.convertTimelineGroup = function (group) {
+        this.optimizer.optimizeTimeline(group);
         var result = {};
         for (var _i = 0, _a = group.timelines; _i < _a.length; _i++) {
             var timeline = _a[_i];
