@@ -66,7 +66,22 @@ export class SpineAnimationHelper {
 
     public static obtainFrameCurve(frame:FlashFrame):SpineCurveType {
         if (frame != null) {
-            return (frame.tweenType === 'none') ? 'stepped' : null;
+            const points = frame.getCustomEase();
+
+            if (frame.tweenType === 'none') {
+                return 'stepped';
+            }
+
+            if (frame.tweenEasing === 0 || points == null || points.length !== 4) {
+                return null;
+            }
+
+            return {
+                cx1: points[1].x,
+                cy1: points[1].y,
+                cx2: points[2].x,
+                cy2: points[2].y
+            };
         }
 
         return null;

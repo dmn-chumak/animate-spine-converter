@@ -61,10 +61,32 @@ export class SpineFormatV3_8_99 implements SpineFormat {
 
     //-----------------------------------
 
+    public convertTimelineFrameCurve(frame:SpineTimelineFrame):any {
+        const curve = frame.curve;
+
+        if (curve === 'stepped') {
+            return { curve: 'stepped' };
+        }
+
+        if (curve != null) {
+            return JsonFormatUtil.cleanObject({
+                curve: curve.cx1,
+                c2: curve.cy1,
+                c3: curve.cx2,
+                c4: curve.cy2
+            });
+        }
+
+        return null;
+    }
+
     public convertTimelineFrame(frame:SpineTimelineFrame):any {
+        const curve = this.convertTimelineFrameCurve(frame);
+
         return JsonFormatUtil.cleanObject({
+            ...curve,
+
             time: frame.time,
-            curve: frame.curve,
             angle: frame.angle,
             name: frame.name,
             color: frame.color,

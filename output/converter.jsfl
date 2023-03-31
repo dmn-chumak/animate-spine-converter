@@ -638,7 +638,19 @@ var SpineAnimationHelper = /** @class */ (function () {
     };
     SpineAnimationHelper.obtainFrameCurve = function (frame) {
         if (frame != null) {
-            return (frame.tweenType === 'none') ? 'stepped' : null;
+            var points = frame.getCustomEase();
+            if (frame.tweenType === 'none') {
+                return 'stepped';
+            }
+            if (frame.tweenEasing === 0 || points == null || points.length !== 4) {
+                return null;
+            }
+            return {
+                cx1: points[1].x,
+                cy1: points[1].y,
+                cx2: points[2].x,
+                cy2: points[2].y
+            };
         }
         return null;
     };
@@ -1000,6 +1012,17 @@ exports.SpineRegionAttachment = SpineRegionAttachment;
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 
 exports.SpineFormatV3_8_99 = void 0;
 var JsonFormatUtil_1 = __webpack_require__(/*! ../../utils/JsonFormatUtil */ "./source/utils/JsonFormatUtil.ts");
@@ -1042,16 +1065,24 @@ var SpineFormatV3_8_99 = /** @class */ (function () {
         return result;
     };
     //-----------------------------------
+    SpineFormatV3_8_99.prototype.convertTimelineFrameCurve = function (frame) {
+        var curve = frame.curve;
+        if (curve === 'stepped') {
+            return { curve: 'stepped' };
+        }
+        if (curve != null) {
+            return JsonFormatUtil_1.JsonFormatUtil.cleanObject({
+                curve: curve.cx1,
+                c2: curve.cy1,
+                c3: curve.cx2,
+                c4: curve.cy2
+            });
+        }
+        return null;
+    };
     SpineFormatV3_8_99.prototype.convertTimelineFrame = function (frame) {
-        return JsonFormatUtil_1.JsonFormatUtil.cleanObject({
-            time: frame.time,
-            curve: frame.curve,
-            angle: frame.angle,
-            name: frame.name,
-            color: frame.color,
-            x: frame.x,
-            y: frame.y
-        });
+        var curve = this.convertTimelineFrameCurve(frame);
+        return JsonFormatUtil_1.JsonFormatUtil.cleanObject(__assign(__assign({}, curve), { time: frame.time, angle: frame.angle, name: frame.name, color: frame.color, x: frame.x, y: frame.y }));
     };
     SpineFormatV3_8_99.prototype.convertTimeline = function (timeline) {
         var length = timeline.frames.length;
