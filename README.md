@@ -2,6 +2,8 @@
 
 A simple JSFL script that converts basic Adobe Animate (Adobe Flash) animations to the Spine format.
 
+Several examples of converted animations are available [here](https://dmn-chumak.github.io/animate-spine-converter/example/examples.html).
+
 ## Supported Features
 
 - supports v3.8.99, v4.0.64 and v.4.1.19 formats;
