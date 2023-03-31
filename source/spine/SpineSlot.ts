@@ -14,7 +14,7 @@ export class SpineSlot {
     public attachments:SpineAttachment[];
     public attachment:SpineAttachment;
     public blend:SpineBlendMode;
-    public color:number;
+    public color:string;
 
     public constructor() {
         this.initialized = false;

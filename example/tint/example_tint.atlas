@@ -1,0 +1,13 @@
+
+example_tint.png
+size: 512,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+child_3
+  rotate: false
+  xy: 2, 2
+  size: 304, 304
+  orig: 304, 304
+  offset: 0, 0
+  index: -1

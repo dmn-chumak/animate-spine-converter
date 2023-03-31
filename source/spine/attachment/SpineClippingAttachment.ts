@@ -6,7 +6,7 @@ export class SpineClippingAttachment extends SpineAttachment {
     public end:SpineSlot;
     public vertexCount:number;
     public vertices:number[];
-    public color:number;
+    public color:string;
 
     public constructor() {
         super(SpineAttachmentType.CLIPPING);

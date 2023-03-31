@@ -71,7 +71,7 @@ export class Converter {
         SpineAnimationHelper.applySlotAttachment(
             context.global.animation,
             slot,
-            context.frame,
+            context,
             attachment,
             context.time
         );
@@ -113,7 +113,7 @@ export class Converter {
         SpineAnimationHelper.applySlotAttachment(
             context.global.animation,
             slot,
-            context.frame,
+            context,
             attachment,
             context.time
         );
@@ -237,7 +237,7 @@ export class Converter {
                         SpineAnimationHelper.applySlotAttachment(
                             subcontext.global.animation,
                             slot,
-                            subcontext.frame,
+                            subcontext,
                             null,
                             frameTime
                         );

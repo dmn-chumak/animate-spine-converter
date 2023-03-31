@@ -18,11 +18,6 @@ export class JsonFormatUtil {
             }
 
             if (JsonUtil.validNumber(value)) {
-                if (key === 'color') {
-                    result[key] = (value as number).toString(16);
-                    continue;
-                }
-
                 if (key === 'shearX' || key === 'shearY' || key === 'rotation') {
                     if (value !== 0) {
                         result[key] = value;

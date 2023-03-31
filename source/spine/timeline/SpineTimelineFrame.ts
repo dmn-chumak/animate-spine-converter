@@ -5,7 +5,7 @@ export class SpineTimelineFrame {
     public curve:SpineCurveType;
     public angle:number;
     public name:string;
-    public color:number;
+    public color:string;
     public x:number;
     public y:number;
 

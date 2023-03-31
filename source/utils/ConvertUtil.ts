@@ -41,18 +41,6 @@ export class ConvertUtil {
         }
     }
 
-    public static obtainElementAlpha(element:FlashElement):number {
-        if (element.visible === false) {
-            return 0;
-        }
-
-        if (isNaN(element.colorAlphaPercent) === false) {
-            return (element.colorAlphaPercent / 100);
-        }
-
-        return 1;
-    }
-
     public static obtainElementLabels(element:FlashElement):ConverterFrameLabel[] {
         const labels:ConverterFrameLabel[] = [];
         const timeline = element.libraryItem.timeline;

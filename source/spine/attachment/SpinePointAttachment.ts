@@ -5,7 +5,7 @@ export class SpinePointAttachment extends SpineAttachment {
     public x:number;
     public y:number;
     public rotation:number;
-    public color:number;
+    public color:string;
 
     public constructor() {
         super(SpineAttachmentType.POINT);

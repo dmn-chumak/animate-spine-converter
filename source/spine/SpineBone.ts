@@ -15,7 +15,7 @@ export class SpineBone {
     public scaleY:number;
     public shearX:number;
     public shearY:number;
-    public color:number;
+    public color:string;
 
     public constructor() {
         this.initialized = false;

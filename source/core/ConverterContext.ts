@@ -5,7 +5,7 @@ import { SpineSlot } from '../spine/SpineSlot';
 import { SpineTransformMatrix } from '../spine/transform/SpineTransformMatrix';
 import { SpineBlendMode } from '../spine/types/SpineBlendMode';
 import { ConvertUtil } from '../utils/ConvertUtil';
-import { NumberUtil } from '../utils/NumberUtil';
+import { ConverterColor } from './ConverterColor';
 import { ConverterContextGlobal } from './ConverterContextGlobal';
 import { ConverterFrameLabel } from './ConverterFrameLabel';
 
@@ -13,7 +13,7 @@ export class ConverterContext {
     public global:ConverterContextGlobal;
     public parent:ConverterContext;
 
-    public alpha:number;
+    public color:ConverterColor;
     public blendMode:SpineBlendMode;
     public layer:FlashLayer;
     public element:FlashElement;
@@ -74,7 +74,7 @@ export class ConverterContext {
         context.parent = this;
 
         context.blendMode = ConvertUtil.obtainElementBlendMode(element);
-        context.alpha = this.alpha * ConvertUtil.obtainElementAlpha(element);
+        context.color = this.color.blend(element);
         context.layer = this.layer;
         context.element = element;
         context.frame = this.frame;
@@ -99,7 +99,7 @@ export class ConverterContext {
         SpineAnimationHelper.applyBoneAnimation(
             context.global.animation,
             context.bone,
-            context.frame,
+            context,
             transform,
             context.time
         );
@@ -123,7 +123,7 @@ export class ConverterContext {
         context.parent = this;
 
         context.blendMode = ConvertUtil.obtainElementBlendMode(element);
-        context.alpha = this.alpha;
+        context.color = this.color;
         context.layer = this.layer;
         context.element = element;
         context.frame = this.frame;
@@ -137,7 +137,7 @@ export class ConverterContext {
         if (context.slot.initialized === false) {
             context.slot.initialized = true;
 
-            context.slot.color = NumberUtil.colors(0xFFFFFF, context.alpha);
+            context.slot.color = context.color.merge();
             context.slot.blend = context.blendMode;
 
             if (context.layer != null) {
@@ -149,7 +149,7 @@ export class ConverterContext {
                 SpineAnimationHelper.applySlotAttachment(
                     context.global.animation,
                     context.slot,
-                    context.frame,
+                    context,
                     null,
                     0
                 );
@@ -161,8 +161,8 @@ export class ConverterContext {
         SpineAnimationHelper.applySlotAnimation(
             context.global.animation,
             context.slot,
-            context.frame,
-            context.alpha,
+            context,
+            context.color.merge(),
             context.time
         );
 

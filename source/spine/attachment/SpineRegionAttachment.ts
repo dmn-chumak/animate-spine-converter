@@ -10,7 +10,7 @@ export class SpineRegionAttachment extends SpineAttachment {
     public scaleY:number;
     public width:number;
     public height:number;
-    public color:number;
+    public color:string;
 
     public constructor() {
         super(SpineAttachmentType.REGION);

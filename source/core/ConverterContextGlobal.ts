@@ -8,6 +8,7 @@ import { SpineBlendMode } from '../spine/types/SpineBlendMode';
 import { ConvertUtil } from '../utils/ConvertUtil';
 import { PathUtil } from '../utils/PathUtil';
 import { StringUtil } from '../utils/StringUtil';
+import { ConverterColor } from './ConverterColor';
 import { ConverterConfig } from './ConverterConfig';
 import { ConverterContext } from './ConverterContext';
 import { ConverterFrameLabel } from './ConverterFrameLabel';
@@ -53,7 +54,7 @@ export class ConverterContextGlobal extends ConverterContext {
         context.slot = null;
 
         context.blendMode = SpineBlendMode.NORMAL;
-        context.alpha = 1;
+        context.color = new ConverterColor();
         context.layer = null;
         context.element = element;
         context.frame = null;

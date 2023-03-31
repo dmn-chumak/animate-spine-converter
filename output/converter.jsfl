@@ -55,7 +55,7 @@ var Converter = /** @class */ (function () {
         attachment.x = spineImage.x;
         attachment.y = spineImage.y;
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context.frame, attachment, context.time);
+        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context, attachment, context.time);
     };
     //-----------------------------------
     Converter.prototype.convertBitmapElementSlot = function (context) {
@@ -79,7 +79,7 @@ var Converter = /** @class */ (function () {
         attachment.vertexCount = attachment.vertices.length / 2;
         attachment.end = context.global.skeleton.findSlot(slot.name);
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context.frame, attachment, context.time);
+        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context, attachment, context.time);
     };
     Converter.prototype.convertShapeElementSlot = function (context) {
         var _this = this;
@@ -166,7 +166,7 @@ var Converter = /** @class */ (function () {
                     var subcontext = context.switchContextFrame(frame);
                     for (var _i = 0, layerSlots_1 = layerSlots; _i < layerSlots_1.length; _i++) {
                         var slot = layerSlots_1[_i];
-                        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(subcontext.global.animation, slot, subcontext.frame, null, frameTime);
+                        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(subcontext.global.animation, slot, subcontext, null, frameTime);
                     }
                 }
                 continue;
@@ -237,6 +237,59 @@ exports.Converter = Converter;
 
 /***/ }),
 
+/***/ "./source/core/ConverterColor.ts":
+/*!***************************************!*\
+  !*** ./source/core/ConverterColor.ts ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+
+exports.ConverterColor = void 0;
+var NumberUtil_1 = __webpack_require__(/*! ../utils/NumberUtil */ "./source/utils/NumberUtil.ts");
+var ConverterColor = /** @class */ (function () {
+    function ConverterColor(element) {
+        if (element === void 0) { element = null; }
+        this._parent = null;
+        this._element = element;
+    }
+    ConverterColor.prototype.blend = function (element) {
+        var color = new ConverterColor(element);
+        color._parent = this;
+        return color;
+    };
+    ConverterColor.prototype.merge = function () {
+        var current = this;
+        var visible = 1;
+        var alpha = 1;
+        var red = 1;
+        var green = 1;
+        var blue = 1;
+        //-----------------------------------
+        while (current != null && current._element != null) {
+            var element = current._element;
+            if (element.visible === false) {
+                visible = 0;
+            }
+            alpha = visible * NumberUtil_1.NumberUtil.clamp(alpha * (element.colorAlphaPercent / 100) + element.colorAlphaAmount / 255);
+            red = NumberUtil_1.NumberUtil.clamp(red * (element.colorRedPercent / 100) + element.colorRedAmount / 255);
+            green = NumberUtil_1.NumberUtil.clamp(green * (element.colorGreenPercent / 100) + element.colorGreenAmount / 255);
+            blue = NumberUtil_1.NumberUtil.clamp(blue * (element.colorBluePercent / 100) + element.colorBlueAmount / 255);
+            current = current._parent;
+        }
+        //-----------------------------------
+        return (NumberUtil_1.NumberUtil.color(red) +
+            NumberUtil_1.NumberUtil.color(green) +
+            NumberUtil_1.NumberUtil.color(blue) +
+            NumberUtil_1.NumberUtil.color(alpha));
+    };
+    return ConverterColor;
+}());
+exports.ConverterColor = ConverterColor;
+
+
+/***/ }),
+
 /***/ "./source/core/ConverterContext.ts":
 /*!*****************************************!*\
   !*** ./source/core/ConverterContext.ts ***!
@@ -249,7 +302,6 @@ exports.ConverterContext = void 0;
 var SpineAnimationHelper_1 = __webpack_require__(/*! ../spine/SpineAnimationHelper */ "./source/spine/SpineAnimationHelper.ts");
 var SpineTransformMatrix_1 = __webpack_require__(/*! ../spine/transform/SpineTransformMatrix */ "./source/spine/transform/SpineTransformMatrix.ts");
 var ConvertUtil_1 = __webpack_require__(/*! ../utils/ConvertUtil */ "./source/utils/ConvertUtil.ts");
-var NumberUtil_1 = __webpack_require__(/*! ../utils/NumberUtil */ "./source/utils/NumberUtil.ts");
 var ConverterContext = /** @class */ (function () {
     function ConverterContext() {
         // empty
@@ -286,7 +338,7 @@ var ConverterContext = /** @class */ (function () {
         context.global = this.global;
         context.parent = this;
         context.blendMode = ConvertUtil_1.ConvertUtil.obtainElementBlendMode(element);
-        context.alpha = this.alpha * ConvertUtil_1.ConvertUtil.obtainElementAlpha(element);
+        context.color = this.color.blend(element);
         context.layer = this.layer;
         context.element = element;
         context.frame = this.frame;
@@ -299,7 +351,7 @@ var ConverterContext = /** @class */ (function () {
             SpineAnimationHelper_1.SpineAnimationHelper.applyBoneTransform(context.bone, transform);
         }
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applyBoneAnimation(context.global.animation, context.bone, context.frame, transform, context.time);
+        SpineAnimationHelper_1.SpineAnimationHelper.applyBoneAnimation(context.global.animation, context.bone, context, transform, context.time);
         //-----------------------------------
         return context;
     };
@@ -313,7 +365,7 @@ var ConverterContext = /** @class */ (function () {
         context.global = this.global;
         context.parent = this;
         context.blendMode = ConvertUtil_1.ConvertUtil.obtainElementBlendMode(element);
-        context.alpha = this.alpha;
+        context.color = this.color;
         context.layer = this.layer;
         context.element = element;
         context.frame = this.frame;
@@ -323,18 +375,18 @@ var ConverterContext = /** @class */ (function () {
         //-----------------------------------
         if (context.slot.initialized === false) {
             context.slot.initialized = true;
-            context.slot.color = NumberUtil_1.NumberUtil.colors(0xFFFFFF, context.alpha);
+            context.slot.color = context.color.merge();
             context.slot.blend = context.blendMode;
             if (context.layer != null) {
                 var layerSlots = context.global.layersCache.get(context.layer);
                 layerSlots.push(context.slot);
             }
             if (context.time !== 0) {
-                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, context.slot, context.frame, null, 0);
+                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, context.slot, context, null, 0);
             }
         }
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context.frame, context.alpha, context.time);
+        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context, context.color.merge(), context.time);
         //-----------------------------------
         return context;
     };
@@ -375,6 +427,7 @@ var SpineTransformMatrix_1 = __webpack_require__(/*! ../spine/transform/SpineTra
 var ConvertUtil_1 = __webpack_require__(/*! ../utils/ConvertUtil */ "./source/utils/ConvertUtil.ts");
 var PathUtil_1 = __webpack_require__(/*! ../utils/PathUtil */ "./source/utils/PathUtil.ts");
 var StringUtil_1 = __webpack_require__(/*! ../utils/StringUtil */ "./source/utils/StringUtil.ts");
+var ConverterColor_1 = __webpack_require__(/*! ./ConverterColor */ "./source/core/ConverterColor.ts");
 var ConverterContext_1 = __webpack_require__(/*! ./ConverterContext */ "./source/core/ConverterContext.ts");
 var ConverterMap_1 = __webpack_require__(/*! ./ConverterMap */ "./source/core/ConverterMap.ts");
 var ConverterContextGlobal = /** @class */ (function (_super) {
@@ -403,7 +456,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.clipping = null;
         context.slot = null;
         context.blendMode = "normal" /* SpineBlendMode.NORMAL */;
-        context.alpha = 1;
+        context.color = new ConverterColor_1.ConverterColor();
         context.layer = null;
         context.element = element;
         context.frame = null;
@@ -582,18 +635,17 @@ exports.SpineAnimation = SpineAnimation;
 /*!**********************************************!*\
   !*** ./source/spine/SpineAnimationHelper.ts ***!
   \**********************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ (function(__unused_webpack_module, exports) {
 
 
 
 exports.SpineAnimationHelper = void 0;
-var NumberUtil_1 = __webpack_require__(/*! ../utils/NumberUtil */ "./source/utils/NumberUtil.ts");
 var SpineAnimationHelper = /** @class */ (function () {
     function SpineAnimationHelper() {
     }
-    SpineAnimationHelper.applyBoneAnimation = function (animation, bone, frame, transform, time) {
+    SpineAnimationHelper.applyBoneAnimation = function (animation, bone, context, transform, time) {
         var timeline = animation.createBoneTimeline(bone);
-        var curve = SpineAnimationHelper.obtainFrameCurve(frame);
+        var curve = SpineAnimationHelper.obtainFrameCurve(context);
         var rotateTimeline = timeline.createTimeline("rotate" /* SpineTimelineType.ROTATE */);
         var rotateFrame = rotateTimeline.createFrame(time, curve);
         rotateFrame.angle = transform.rotation - bone.rotation;
@@ -619,9 +671,9 @@ var SpineAnimationHelper = /** @class */ (function () {
         bone.shearX = transform.shearX;
         bone.shearY = transform.shearY;
     };
-    SpineAnimationHelper.applySlotAttachment = function (animation, slot, frame, attachment, time) {
+    SpineAnimationHelper.applySlotAttachment = function (animation, slot, context, attachment, time) {
         var timeline = animation.createSlotTimeline(slot);
-        var curve = SpineAnimationHelper.obtainFrameCurve(frame);
+        var curve = SpineAnimationHelper.obtainFrameCurve(context);
         var attachmentTimeline = timeline.createTimeline("attachment" /* SpineTimelineType.ATTACHMENT */);
         var attachmentFrame = attachmentTimeline.createFrame(time, curve);
         attachmentFrame.name = (attachment != null) ? attachment.name : null;
@@ -629,14 +681,26 @@ var SpineAnimationHelper = /** @class */ (function () {
             slot.attachment = attachment;
         }
     };
-    SpineAnimationHelper.applySlotAnimation = function (animation, slot, frame, alpha, time) {
+    SpineAnimationHelper.applySlotAnimation = function (animation, slot, context, color, time) {
         var timeline = animation.createSlotTimeline(slot);
-        var curve = SpineAnimationHelper.obtainFrameCurve(frame);
+        var curve = SpineAnimationHelper.obtainFrameCurve(context);
         var colorTimeline = timeline.createTimeline("color" /* SpineTimelineType.COLOR */);
         var colorFrame = colorTimeline.createFrame(time, curve);
-        colorFrame.color = NumberUtil_1.NumberUtil.colors(0xFFFFFF, alpha);
+        colorFrame.color = color;
     };
-    SpineAnimationHelper.obtainFrameCurve = function (frame) {
+    SpineAnimationHelper.obtainFrameCurve = function (context) {
+        var frame = context.frame;
+        //-----------------------------------
+        while (frame != null && frame.tweenType === 'none') {
+            context = context.parent;
+            if (context != null) {
+                frame = context.frame;
+            }
+            else {
+                break;
+            }
+        }
+        //-----------------------------------
         if (frame != null) {
             var points = frame.getCustomEase();
             if (frame.tweenType === 'none') {
@@ -652,6 +716,7 @@ var SpineAnimationHelper = /** @class */ (function () {
                 cy2: points[2].y
             };
         }
+        //-----------------------------------
         return null;
     };
     return SpineAnimationHelper;
@@ -1607,15 +1672,6 @@ var ConvertUtil = /** @class */ (function () {
             return "normal" /* SpineBlendMode.NORMAL */;
         }
     };
-    ConvertUtil.obtainElementAlpha = function (element) {
-        if (element.visible === false) {
-            return 0;
-        }
-        if (isNaN(element.colorAlphaPercent) === false) {
-            return (element.colorAlphaPercent / 100);
-        }
-        return 1;
-    };
     ConvertUtil.obtainElementLabels = function (element) {
         var labels = [];
         var timeline = element.libraryItem.timeline;
@@ -1866,10 +1922,6 @@ var JsonFormatUtil = /** @class */ (function () {
                 continue;
             }
             if (JsonUtil_1.JsonUtil.validNumber(value)) {
-                if (key === 'color') {
-                    result[key] = value.toString(16);
-                    continue;
-                }
                 if (key === 'shearX' || key === 'shearY' || key === 'rotation') {
                     if (value !== 0) {
                         result[key] = value;
@@ -2074,12 +2126,22 @@ exports.NumberUtil = void 0;
 var NumberUtil = /** @class */ (function () {
     function NumberUtil() {
     }
-    NumberUtil.equals = function (a, b, precision) {
+    NumberUtil.equals = function (first, second, precision) {
         if (precision === void 0) { precision = 0.001; }
-        return Math.abs(a - b) < precision;
+        return Math.abs(first - second) < precision;
     };
-    NumberUtil.colors = function (rgb, alpha) {
-        return rgb * 0x100 + Math.floor(alpha * 0xFF);
+    NumberUtil.clamp = function (value) {
+        return (value < 1) ? ((value > 0) ? value : 0) : 1;
+    };
+    NumberUtil.prepend = function (content, value, length) {
+        while (content.length < length) {
+            content = value + content;
+        }
+        return content;
+    };
+    NumberUtil.color = function (value) {
+        var color = Math.floor(value * 255).toString(16);
+        return NumberUtil.prepend(color, 0, 2);
     };
     return NumberUtil;
 }());
