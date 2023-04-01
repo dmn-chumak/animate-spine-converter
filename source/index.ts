@@ -10,7 +10,7 @@ const config:ConverterConfig = {
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
     mergeSkeletons: true,
-    mergeSkeletonsRootBone: true,
+    mergeSkeletonsRootBone: false,
     transformRootBone: false,
     exportShapes: true,
     exportTextAsShapes: true,

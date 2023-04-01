@@ -458,7 +458,7 @@ var ConverterMap_1 = __webpack_require__(/*! ./ConverterMap */ "./source/core/Co
 var ConverterContextGlobal = /** @class */ (function (_super) {
     __extends(ConverterContextGlobal, _super);
     function ConverterContextGlobal() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        return _super.call(this) || this;
     }
     ConverterContextGlobal.initializeGlobal = function (element, config, frameRate, skeleton, cache) {
         if (skeleton === void 0) { skeleton = null; }
@@ -2365,7 +2365,7 @@ var config = {
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
     mergeSkeletons: true,
-    mergeSkeletonsRootBone: true,
+    mergeSkeletonsRootBone: false,
     transformRootBone: false,
     exportShapes: true,
     exportTextAsShapes: true,
