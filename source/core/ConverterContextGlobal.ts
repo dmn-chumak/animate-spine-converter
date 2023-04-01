@@ -25,16 +25,12 @@ export class ConverterContextGlobal extends ConverterContext {
     public skeleton:SpineSkeleton;
     public frameRate:number;
 
-    public static initialize(element:FlashElement, config:ConverterConfig, frameRate:number, skeleton:SpineSkeleton = null):ConverterContextGlobal {
+    public static initializeGlobal(element:FlashElement, config:ConverterConfig, frameRate:number, skeleton:SpineSkeleton = null, cache:ConverterContextGlobal = null):ConverterContextGlobal {
         const transform = new SpineTransformMatrix(element);
         const name = StringUtil.simplify(element.libraryItem.name);
-        const context = new ConverterContextGlobal();
+        const context = (cache == null) ? ConverterContextGlobal.initializeCache() : cache;
 
         //-----------------------------------
-
-        context.imagesCache = new ConverterMap<string, SpineImage>();
-        context.shapesCache = new ConverterMap<FlashElement | FlashItem, string>();
-        context.layersCache = new ConverterMap<FlashLayer, SpineSlot[]>();
 
         context.global = context;
         context.parent = null;
@@ -63,7 +59,7 @@ export class ConverterContextGlobal extends ConverterContext {
 
         //-----------------------------------
 
-        if (config.mergeSkeletons) {
+        if (config.mergeSkeletons && config.mergeSkeletonsRootBone !== true) {
             context.bone = context.skeleton.createBone(
                 context.skeleton.name,
                 context.bone.name
@@ -78,6 +74,20 @@ export class ConverterContextGlobal extends ConverterContext {
                 transform
             );
         }
+
+        //-----------------------------------
+
+        return context;
+    }
+
+    public static initializeCache():ConverterContextGlobal {
+        const context = new ConverterContextGlobal();
+
+        //-----------------------------------
+
+        context.imagesCache = new ConverterMap<string, SpineImage>();
+        context.shapesCache = new ConverterMap<FlashElement | FlashItem, string>();
+        context.layersCache = new ConverterMap<FlashLayer, SpineSlot[]>();
 
         //-----------------------------------
 

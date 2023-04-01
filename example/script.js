@@ -1,6 +1,6 @@
 async function createSpinePlayer(container, path, delay) {
     const application = new PIXI.Application({ backgroundColor: 0xFFFFFF, width: 300, height: 300 });
-    document.getElementById(container).appendChild(application.view);
+    container.appendChild(application.view);
 
     const resource = await PIXI.Assets.load(path);
     const labels = resource.spineData.animations.map((animation) => animation.name);
@@ -30,7 +30,7 @@ async function createSpinePlayer(container, path, delay) {
 
 async function createFlashPlayer(container, path) {
     const player = window.RufflePlayer.newest().createPlayer();
-    document.getElementById(container).appendChild(player);
+    container.appendChild(player);
     await player.load(path);
 
     return player;

@@ -1,0 +1,69 @@
+
+example_merge.png
+size: 128,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+human_arm
+  rotate: false
+  xy: 26, 38
+  size: 60, 26
+  orig: 60, 26
+  offset: 0, 0
+  index: -1
+human_body
+  rotate: false
+  xy: 26, 136
+  size: 46, 72
+  orig: 46, 72
+  offset: 0, 0
+  index: -1
+human_forearm
+  rotate: false
+  xy: 22, 12
+  size: 48, 24
+  orig: 48, 24
+  offset: 0, 0
+  index: -1
+human_grenade
+  rotate: false
+  xy: 74, 162
+  size: 28, 46
+  orig: 28, 46
+  offset: 0, 0
+  index: -1
+human_hand
+  rotate: false
+  xy: 74, 132
+  size: 34, 28
+  orig: 34, 28
+  offset: 0, 0
+  index: -1
+human_head
+  rotate: false
+  xy: 26, 96
+  size: 46, 38
+  orig: 46, 38
+  offset: 0, 0
+  index: -1
+human_pistol
+  rotate: false
+  xy: 2, 2
+  size: 18, 52
+  orig: 18, 52
+  offset: 0, 0
+  index: -1
+human_rifle
+  rotate: false
+  xy: 2, 56
+  size: 22, 152
+  orig: 22, 152
+  offset: 0, 0
+  index: -1
+human_weapon
+  rotate: false
+  xy: 26, 66
+  size: 88, 28
+  orig: 88, 28
+  offset: 0, 0
+  index: -1

@@ -5,6 +5,7 @@ export interface ConverterConfig {
     imagesExportPath?:string;
     appendSkeletonToImagesPath?:boolean;
     mergeSkeletons?:boolean;
+    mergeSkeletonsRootBone?:boolean;
     transformRootBone?:boolean;
     exportShapes?:boolean;
     exportTextAsShapes?:boolean;

@@ -10,11 +10,13 @@ Several examples of converted animations are available [here](https://dmn-chumak
 - auto-export shapes, text fields and bitmaps;
 - auto-merge simple MovieClips into a single Spine slot;
 - auto-cleanup unnecessary keyframes to reduce output size;
+- auto-merge similar MovieClips into a single Spine skeleton;
 - basic shape masks (rectangles, circles, polygons);
 - blend modes (normal, add, multiply, screen);
 - basic bitmap sequence animations (each bitmap should have the same width/height);
 - basic transform animations (position, scale, skew, rotation);
 - basic color effects parsing and animating (tint, brightness, etc);
+- basic easing functions (linear, easeIn, easeOut);
 - basic transparency animation;
 - split timeline into multiple animations.
 
@@ -42,6 +44,7 @@ Several examples of converted animations are available [here](https://dmn-chumak
 - imagesExportPath;
 - appendSkeletonToImagesPath;
 - mergeSkeletons;
+- mergeSkeletonsRootBone;
 - transformRootBone;
 - exportShapes;
 - exportTextAsShapes;

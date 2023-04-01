@@ -11,41 +11,45 @@
         <title>Examples</title>
     </head>
     <body>
-        <div class="examples">
-            <div id="hero_flash"></div>
-            <div id="hero_spine"></div>
-        </div>
-
-        <hr />
-
-        <div class="examples">
-            <div id="tint_flash"></div>
-            <div id="tint_spine"></div>
-        </div>
-
         <script>
             window.onload = () => {
+                const examples = [ 'hero', 'merge', 'tint' ];
+
                 createRuffleConfig();
 
-                (async () => {
-                    Promise.all([
-                        createSpinePlayer('hero_spine', './hero/example_hero.json', 200),
-                        createFlashPlayer('hero_flash', './hero/example_hero.swf')
-                    ]).then(([ player1, player2 ]) => {
-                        player1.play();
-                        player2.play();
-                    });
-                })();
+                for (let index = 0; index < examples.length; index++) {
+                    const example = examples[index];
 
-                (async () => {
-                    Promise.all([
-                        createSpinePlayer('tint_spine', './tint/example_tint.json', 0),
-                        createFlashPlayer('tint_flash', './tint/example_tint.swf')
-                    ]).then(([ player1, player2 ]) => {
-                        player1.play();
-                        player2.play();
-                    });
-                })();
+                    if (index > 0) {
+                        const separator = document.createElement('hr');
+                        document.body.appendChild(separator);
+                    }
+
+                    const container = document.createElement('div');
+                    container.className = 'examples';
+                    document.body.appendChild(container);
+
+                    const containerTitle = document.createElement('div');
+                    containerTitle.className = 'title';
+                    containerTitle.innerHTML = `Example "${ example }"`;
+                    container.appendChild(containerTitle);
+
+                    const containerFlash = document.createElement('div');
+                    container.appendChild(containerFlash);
+
+                    const containerSpine = document.createElement('div');
+                    container.appendChild(containerSpine);
+
+                    (async () => {
+                        Promise.all([
+                            createSpinePlayer(containerSpine, `./${ example }/example_${ example }.json`, 200),
+                            createFlashPlayer(containerFlash, `./${ example }/example_${ example }.swf`)
+                        ]).then(([ player1, player2 ]) => {
+                            player1.play();
+                            player2.play();
+                        });
+                    })();
+                }
             };
         </script>
     </body>

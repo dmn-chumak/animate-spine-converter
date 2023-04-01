@@ -310,13 +310,23 @@ export class Converter {
 
     public convertSelection():SpineSkeleton[] {
         const skeleton = (this._config.mergeSkeletons ? new SpineSkeleton() : null);
+        const cache = ((this._config.mergeSkeletons && this._config.mergeSkeletonsRootBone) ? ConverterContextGlobal.initializeCache() : null);
         const selection = this._document.selection;
         const output:SpineSkeleton[] = [];
 
         //-----------------------------------
 
+        if (cache != null) {
+            if (this._config.appendSkeletonToImagesPath) {
+                Logger.trace('Option "appendSkeletonToImagesPath" has been disabled to convert with "mergeSkeletonsRootBone" mode.');
+                this._config.appendSkeletonToImagesPath = false;
+            }
+        }
+
+        //-----------------------------------
+
         for (const element of selection) {
-            const context = ConverterContextGlobal.initialize(element, this._config, this._document.frameRate, skeleton);
+            const context = ConverterContextGlobal.initializeGlobal(element, this._config, this._document.frameRate, skeleton, cache);
             const result = this.convertSymbolInstance(element, context);
 
             if (result && skeleton == null) {

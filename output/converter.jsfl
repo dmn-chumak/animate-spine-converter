@@ -227,12 +227,20 @@ var Converter = /** @class */ (function () {
     };
     Converter.prototype.convertSelection = function () {
         var skeleton = (this._config.mergeSkeletons ? new SpineSkeleton_1.SpineSkeleton() : null);
+        var cache = ((this._config.mergeSkeletons && this._config.mergeSkeletonsRootBone) ? ConverterContextGlobal_1.ConverterContextGlobal.initializeCache() : null);
         var selection = this._document.selection;
         var output = [];
         //-----------------------------------
+        if (cache != null) {
+            if (this._config.appendSkeletonToImagesPath) {
+                Logger_1.Logger.trace('Option "appendSkeletonToImagesPath" has been disabled to convert with "mergeSkeletonsRootBone" mode.');
+                this._config.appendSkeletonToImagesPath = false;
+            }
+        }
+        //-----------------------------------
         for (var _i = 0, selection_1 = selection; _i < selection_1.length; _i++) {
             var element = selection_1[_i];
-            var context = ConverterContextGlobal_1.ConverterContextGlobal.initialize(element, this._config, this._document.frameRate, skeleton);
+            var context = ConverterContextGlobal_1.ConverterContextGlobal.initializeGlobal(element, this._config, this._document.frameRate, skeleton, cache);
             var result = this.convertSymbolInstance(element, context);
             if (result && skeleton == null) {
                 output.push(context.skeleton);
@@ -450,17 +458,15 @@ var ConverterMap_1 = __webpack_require__(/*! ./ConverterMap */ "./source/core/Co
 var ConverterContextGlobal = /** @class */ (function (_super) {
     __extends(ConverterContextGlobal, _super);
     function ConverterContextGlobal() {
-        return _super.call(this) || this;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    ConverterContextGlobal.initialize = function (element, config, frameRate, skeleton) {
+    ConverterContextGlobal.initializeGlobal = function (element, config, frameRate, skeleton, cache) {
         if (skeleton === void 0) { skeleton = null; }
+        if (cache === void 0) { cache = null; }
         var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         var name = StringUtil_1.StringUtil.simplify(element.libraryItem.name);
-        var context = new ConverterContextGlobal();
+        var context = (cache == null) ? ConverterContextGlobal.initializeCache() : cache;
         //-----------------------------------
-        context.imagesCache = new ConverterMap_1.ConverterMap();
-        context.shapesCache = new ConverterMap_1.ConverterMap();
-        context.layersCache = new ConverterMap_1.ConverterMap();
         context.global = context;
         context.parent = null;
         context.labels = ConvertUtil_1.ConvertUtil.obtainElementLabels(element);
@@ -481,13 +487,22 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.frame = null;
         context.time = 0;
         //-----------------------------------
-        if (config.mergeSkeletons) {
+        if (config.mergeSkeletons && config.mergeSkeletonsRootBone !== true) {
             context.bone = context.skeleton.createBone(context.skeleton.name, context.bone.name);
         }
         //-----------------------------------
         if (config.transformRootBone) {
             SpineAnimationHelper_1.SpineAnimationHelper.applyBoneTransform(context.bone, transform);
         }
+        //-----------------------------------
+        return context;
+    };
+    ConverterContextGlobal.initializeCache = function () {
+        var context = new ConverterContextGlobal();
+        //-----------------------------------
+        context.imagesCache = new ConverterMap_1.ConverterMap();
+        context.shapesCache = new ConverterMap_1.ConverterMap();
+        context.layersCache = new ConverterMap_1.ConverterMap();
         //-----------------------------------
         return context;
     };
@@ -2350,6 +2365,7 @@ var config = {
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
     mergeSkeletons: true,
+    mergeSkeletonsRootBone: true,
     transformRootBone: false,
     exportShapes: true,
     exportTextAsShapes: true,
