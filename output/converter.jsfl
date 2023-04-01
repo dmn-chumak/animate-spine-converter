@@ -31,13 +31,14 @@ var Converter = /** @class */ (function () {
     }
     //-----------------------------------
     Converter.prototype.convertElementSlot = function (context, exportTarget, imageExportFactory) {
-        var attachmentName = context.global.shapesCache.get(exportTarget);
-        if (attachmentName == null) {
-            attachmentName = ConvertUtil_1.ConvertUtil.createAttachmentName(context.element, context);
-            context.global.shapesCache.set(exportTarget, attachmentName);
+        var imageName = context.global.shapesCache.get(exportTarget);
+        if (imageName == null) {
+            imageName = ConvertUtil_1.ConvertUtil.createAttachmentName(context.element, context);
+            context.global.shapesCache.set(exportTarget, imageName);
         }
         //-----------------------------------
-        var imagePath = this.prepareImagesExportPath(context, attachmentName);
+        var imagePath = this.prepareImagesExportPath(context, imageName);
+        var attachmentName = this.prepareImagesAttachmentName(context, imageName);
         var slot = context.createSlot(context.element).slot;
         var attachment = slot.createAttachment(attachmentName, "region" /* SpineAttachmentType.REGION */);
         if (context.clipping != null) {
@@ -198,6 +199,12 @@ var Converter = /** @class */ (function () {
             FLfile.createFolder(imagesFolder);
         }
         return imagePath;
+    };
+    Converter.prototype.prepareImagesAttachmentName = function (context, image) {
+        if (this._config.appendSkeletonToImagesPath) {
+            return PathUtil_1.PathUtil.joinPath(context.global.skeleton.name, image);
+        }
+        return image;
     };
     Converter.prototype.resolveWorkingPath = function (path) {
         return PathUtil_1.PathUtil.joinPath(this._workingPath, path);
@@ -447,8 +454,9 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
     }
     ConverterContextGlobal.initialize = function (element, config, frameRate, skeleton) {
         if (skeleton === void 0) { skeleton = null; }
-        var context = new ConverterContextGlobal();
+        var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         var name = StringUtil_1.StringUtil.simplify(element.libraryItem.name);
+        var context = new ConverterContextGlobal();
         //-----------------------------------
         context.imagesCache = new ConverterMap_1.ConverterMap();
         context.shapesCache = new ConverterMap_1.ConverterMap();
@@ -474,11 +482,9 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.time = 0;
         //-----------------------------------
         if (config.mergeSkeletons) {
-            context.skeleton.imagesPath = config.imagesExportPath;
             context.bone = context.skeleton.createBone(context.skeleton.name, context.bone.name);
         }
         //-----------------------------------
-        var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         if (config.transformRootBone) {
             SpineAnimationHelper_1.SpineAnimationHelper.applyBoneTransform(context.bone, transform);
         }

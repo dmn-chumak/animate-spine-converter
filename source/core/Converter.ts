@@ -32,16 +32,17 @@ export class Converter {
     //-----------------------------------
 
     private convertElementSlot(context:ConverterContext, exportTarget:FlashElement | FlashItem, imageExportFactory:ImageExportFactory):void {
-        let attachmentName = context.global.shapesCache.get(exportTarget);
+        let imageName = context.global.shapesCache.get(exportTarget);
 
-        if (attachmentName == null) {
-            attachmentName = ConvertUtil.createAttachmentName(context.element, context);
-            context.global.shapesCache.set(exportTarget, attachmentName);
+        if (imageName == null) {
+            imageName = ConvertUtil.createAttachmentName(context.element, context);
+            context.global.shapesCache.set(exportTarget, imageName);
         }
 
         //-----------------------------------
 
-        const imagePath = this.prepareImagesExportPath(context, attachmentName);
+        const imagePath = this.prepareImagesExportPath(context, imageName);
+        const attachmentName = this.prepareImagesAttachmentName(context, imageName);
         const { slot } = context.createSlot(context.element);
         const attachment = slot.createAttachment(attachmentName, SpineAttachmentType.REGION) as SpineRegionAttachment;
 
@@ -276,6 +277,14 @@ export class Converter {
         }
 
         return imagePath;
+    }
+
+    public prepareImagesAttachmentName(context:ConverterContext, image:string):string {
+        if (this._config.appendSkeletonToImagesPath) {
+            return PathUtil.joinPath(context.global.skeleton.name, image);
+        }
+
+        return image;
     }
 
     public resolveWorkingPath(path:string):string {

@@ -26,8 +26,9 @@ export class ConverterContextGlobal extends ConverterContext {
     public frameRate:number;
 
     public static initialize(element:FlashElement, config:ConverterConfig, frameRate:number, skeleton:SpineSkeleton = null):ConverterContextGlobal {
-        const context = new ConverterContextGlobal();
+        const transform = new SpineTransformMatrix(element);
         const name = StringUtil.simplify(element.libraryItem.name);
+        const context = new ConverterContextGlobal();
 
         //-----------------------------------
 
@@ -63,8 +64,6 @@ export class ConverterContextGlobal extends ConverterContext {
         //-----------------------------------
 
         if (config.mergeSkeletons) {
-            context.skeleton.imagesPath = config.imagesExportPath;
-
             context.bone = context.skeleton.createBone(
                 context.skeleton.name,
                 context.bone.name
@@ -72,8 +71,6 @@ export class ConverterContextGlobal extends ConverterContext {
         }
 
         //-----------------------------------
-
-        const transform = new SpineTransformMatrix(element);
 
         if (config.transformRootBone) {
             SpineAnimationHelper.applyBoneTransform(
