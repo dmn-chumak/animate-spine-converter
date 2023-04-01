@@ -13,6 +13,7 @@ import { LayerMaskUtil } from '../utils/LayerMaskUtil';
 import { LibraryUtil } from '../utils/LibraryUtil';
 import { PathUtil } from '../utils/PathUtil';
 import { ShapeUtil } from '../utils/ShapeUtil';
+import { StringUtil } from '../utils/StringUtil';
 import { ConverterConfig } from './ConverterConfig';
 import { ConverterContext } from './ConverterContext';
 import { ConverterContextGlobal } from './ConverterContextGlobal';
@@ -281,38 +282,49 @@ export class Converter {
         return PathUtil.joinPath(this._workingPath, path);
     }
 
-    public convertSymbolInstance(element:FlashElement):SpineSkeleton {
+    public convertSymbolInstance(element:FlashElement, context:ConverterContext):boolean {
         if (element.elementType === 'instance' && element.instanceType === 'symbol') {
             try {
-                const context = ConverterContextGlobal.initialize(element, this._config, this._document.frameRate);
-                const { skeleton, labels } = context.global;
-
-                for (const label of labels) {
+                for (const label of context.global.labels) {
                     const subcontext = context.switchContextAnimation(label);
                     this.convertElement(subcontext);
                 }
 
-                return skeleton;
+                return true;
             } catch (error) {
                 Logger.error(JsonEncoder.stringify(error));
             }
         }
 
-        return null;
+        return false;
     }
 
     public convertSelection():SpineSkeleton[] {
+        const skeleton = (this._config.mergeSkeletons ? new SpineSkeleton() : null);
         const selection = this._document.selection;
-        const result:SpineSkeleton[] = [];
+        const output:SpineSkeleton[] = [];
+
+        //-----------------------------------
 
         for (const element of selection) {
-            const skeleton = this.convertSymbolInstance(element);
+            const context = ConverterContextGlobal.initialize(element, this._config, this._document.frameRate, skeleton);
+            const result = this.convertSymbolInstance(element, context);
 
-            if (skeleton != null) {
-                result.push(skeleton);
+            if (result && skeleton == null) {
+                output.push(context.skeleton);
             }
         }
 
-        return result;
+        //-----------------------------------
+
+        if (skeleton != null) {
+            skeleton.imagesPath = this._config.imagesExportPath;
+            skeleton.name = StringUtil.simplify(PathUtil.fileBaseName(this._document.name));
+            output.push(skeleton);
+        }
+
+        //-----------------------------------
+
+        return output;
     }
 }

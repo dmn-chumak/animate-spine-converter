@@ -38,4 +38,25 @@ export class PathUtil {
 
         return result;
     }
+
+    public static fileBaseName(path:string):string {
+        const fileName = PathUtil.fileName(path);
+        const index = fileName.lastIndexOf('.');
+
+        if (index !== -1) {
+            return fileName.slice(0, index);
+        }
+
+        return fileName;
+    }
+
+    public static fileName(path:string):string {
+        const index = path.lastIndexOf('/');
+
+        if (index !== -1) {
+            return path.slice(index + 1);
+        }
+
+        return path;
+    }
 }

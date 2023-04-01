@@ -13,6 +13,7 @@
 exports.Converter = void 0;
 var Logger_1 = __webpack_require__(/*! ../logger/Logger */ "./source/logger/Logger.ts");
 var SpineAnimationHelper_1 = __webpack_require__(/*! ../spine/SpineAnimationHelper */ "./source/spine/SpineAnimationHelper.ts");
+var SpineSkeleton_1 = __webpack_require__(/*! ../spine/SpineSkeleton */ "./source/spine/SpineSkeleton.ts");
 var ConvertUtil_1 = __webpack_require__(/*! ../utils/ConvertUtil */ "./source/utils/ConvertUtil.ts");
 var ImageUtil_1 = __webpack_require__(/*! ../utils/ImageUtil */ "./source/utils/ImageUtil.ts");
 var JsonEncoder_1 = __webpack_require__(/*! ../utils/JsonEncoder */ "./source/utils/JsonEncoder.ts");
@@ -20,6 +21,7 @@ var LayerMaskUtil_1 = __webpack_require__(/*! ../utils/LayerMaskUtil */ "./sourc
 var LibraryUtil_1 = __webpack_require__(/*! ../utils/LibraryUtil */ "./source/utils/LibraryUtil.ts");
 var PathUtil_1 = __webpack_require__(/*! ../utils/PathUtil */ "./source/utils/PathUtil.ts");
 var ShapeUtil_1 = __webpack_require__(/*! ../utils/ShapeUtil */ "./source/utils/ShapeUtil.ts");
+var StringUtil_1 = __webpack_require__(/*! ../utils/StringUtil */ "./source/utils/StringUtil.ts");
 var ConverterContextGlobal_1 = __webpack_require__(/*! ./ConverterContextGlobal */ "./source/core/ConverterContextGlobal.ts");
 var Converter = /** @class */ (function () {
     function Converter(document, config) {
@@ -200,35 +202,43 @@ var Converter = /** @class */ (function () {
     Converter.prototype.resolveWorkingPath = function (path) {
         return PathUtil_1.PathUtil.joinPath(this._workingPath, path);
     };
-    Converter.prototype.convertSymbolInstance = function (element) {
+    Converter.prototype.convertSymbolInstance = function (element, context) {
         if (element.elementType === 'instance' && element.instanceType === 'symbol') {
             try {
-                var context = ConverterContextGlobal_1.ConverterContextGlobal.initialize(element, this._config, this._document.frameRate);
-                var _a = context.global, skeleton = _a.skeleton, labels = _a.labels;
-                for (var _i = 0, labels_1 = labels; _i < labels_1.length; _i++) {
-                    var label = labels_1[_i];
+                for (var _i = 0, _a = context.global.labels; _i < _a.length; _i++) {
+                    var label = _a[_i];
                     var subcontext = context.switchContextAnimation(label);
                     this.convertElement(subcontext);
                 }
-                return skeleton;
+                return true;
             }
             catch (error) {
                 Logger_1.Logger.error(JsonEncoder_1.JsonEncoder.stringify(error));
             }
         }
-        return null;
+        return false;
     };
     Converter.prototype.convertSelection = function () {
+        var skeleton = (this._config.mergeSkeletons ? new SpineSkeleton_1.SpineSkeleton() : null);
         var selection = this._document.selection;
-        var result = [];
+        var output = [];
+        //-----------------------------------
         for (var _i = 0, selection_1 = selection; _i < selection_1.length; _i++) {
             var element = selection_1[_i];
-            var skeleton = this.convertSymbolInstance(element);
-            if (skeleton != null) {
-                result.push(skeleton);
+            var context = ConverterContextGlobal_1.ConverterContextGlobal.initialize(element, this._config, this._document.frameRate, skeleton);
+            var result = this.convertSymbolInstance(element, context);
+            if (result && skeleton == null) {
+                output.push(context.skeleton);
             }
         }
-        return result;
+        //-----------------------------------
+        if (skeleton != null) {
+            skeleton.imagesPath = this._config.imagesExportPath;
+            skeleton.name = StringUtil_1.StringUtil.simplify(PathUtil_1.PathUtil.fileBaseName(this._document.name));
+            output.push(skeleton);
+        }
+        //-----------------------------------
+        return output;
     };
     return Converter;
 }());
@@ -435,7 +445,8 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
     function ConverterContextGlobal() {
         return _super.call(this) || this;
     }
-    ConverterContextGlobal.initialize = function (element, config, frameRate) {
+    ConverterContextGlobal.initialize = function (element, config, frameRate, skeleton) {
+        if (skeleton === void 0) { skeleton = null; }
         var context = new ConverterContextGlobal();
         var name = StringUtil_1.StringUtil.simplify(element.libraryItem.name);
         //-----------------------------------
@@ -449,7 +460,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.frameRate = frameRate;
         context.label = null;
         //-----------------------------------
-        context.skeleton = new SpineSkeleton_1.SpineSkeleton();
+        context.skeleton = (skeleton == null) ? new SpineSkeleton_1.SpineSkeleton() : skeleton;
         context.skeleton.imagesPath = (config.appendSkeletonToImagesPath ? PathUtil_1.PathUtil.joinPath(config.imagesExportPath, name) : config.imagesExportPath);
         context.skeleton.name = name;
         context.bone = context.skeleton.createBone('root');
@@ -461,6 +472,11 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.element = element;
         context.frame = null;
         context.time = 0;
+        //-----------------------------------
+        if (config.mergeSkeletons) {
+            context.skeleton.imagesPath = config.imagesExportPath;
+            context.bone = context.skeleton.createBone(context.skeleton.name, context.bone.name);
+        }
         //-----------------------------------
         var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         if (config.transformRootBone) {
@@ -2198,6 +2214,21 @@ var PathUtil = /** @class */ (function () {
         }
         return result;
     };
+    PathUtil.fileBaseName = function (path) {
+        var fileName = PathUtil.fileName(path);
+        var index = fileName.lastIndexOf('.');
+        if (index !== -1) {
+            return fileName.slice(0, index);
+        }
+        return fileName;
+    };
+    PathUtil.fileName = function (path) {
+        var index = path.lastIndexOf('/');
+        if (index !== -1) {
+            return path.slice(index + 1);
+        }
+        return path;
+    };
     return PathUtil;
 }());
 exports.PathUtil = PathUtil;
@@ -2312,6 +2343,7 @@ var config = {
     outputFormat: new SpineFormatV3_8_99_1.SpineFormatV3_8_99(),
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
+    mergeSkeletons: true,
     transformRootBone: false,
     exportShapes: true,
     exportTextAsShapes: true,

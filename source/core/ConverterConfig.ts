@@ -4,6 +4,7 @@ export interface ConverterConfig {
     outputFormat:SpineFormat;
     imagesExportPath?:string;
     appendSkeletonToImagesPath?:boolean;
+    mergeSkeletons?:boolean;
     transformRootBone?:boolean;
     exportShapes?:boolean;
     exportTextAsShapes?:boolean;

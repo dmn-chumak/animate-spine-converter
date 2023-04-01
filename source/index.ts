@@ -9,6 +9,7 @@ const config:ConverterConfig = {
     outputFormat: new SpineFormatV3_8_99(),
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
+    mergeSkeletons: true,
     transformRootBone: false,
     exportShapes: true,
     exportTextAsShapes: true,

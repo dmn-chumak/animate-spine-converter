@@ -41,6 +41,7 @@ Several examples of converted animations are available [here](https://dmn-chumak
 - outputFormat;
 - imagesExportPath;
 - appendSkeletonToImagesPath;
+- mergeSkeletons;
 - transformRootBone;
 - exportShapes;
 - exportTextAsShapes;

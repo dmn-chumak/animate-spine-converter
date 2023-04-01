@@ -25,7 +25,7 @@ export class ConverterContextGlobal extends ConverterContext {
     public skeleton:SpineSkeleton;
     public frameRate:number;
 
-    public static initialize(element:FlashElement, config:ConverterConfig, frameRate:number):ConverterContext {
+    public static initialize(element:FlashElement, config:ConverterConfig, frameRate:number, skeleton:SpineSkeleton = null):ConverterContextGlobal {
         const context = new ConverterContextGlobal();
         const name = StringUtil.simplify(element.libraryItem.name);
 
@@ -45,7 +45,7 @@ export class ConverterContextGlobal extends ConverterContext {
 
         //-----------------------------------
 
-        context.skeleton = new SpineSkeleton();
+        context.skeleton = (skeleton == null) ? new SpineSkeleton() : skeleton;
         context.skeleton.imagesPath = (config.appendSkeletonToImagesPath ? PathUtil.joinPath(config.imagesExportPath, name) : config.imagesExportPath);
         context.skeleton.name = name;
 
@@ -59,6 +59,17 @@ export class ConverterContextGlobal extends ConverterContext {
         context.element = element;
         context.frame = null;
         context.time = 0;
+
+        //-----------------------------------
+
+        if (config.mergeSkeletons) {
+            context.skeleton.imagesPath = config.imagesExportPath;
+
+            context.bone = context.skeleton.createBone(
+                context.skeleton.name,
+                context.bone.name
+            );
+        }
 
         //-----------------------------------
 
