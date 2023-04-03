@@ -14,6 +14,7 @@ const config:ConverterConfig = {
     mergeSkeletonsRootBone: false,
     transformRootBone: false,
     simplifyBonesAndSlots: true,
+    exportFrameCommentsAsEvents: true,
     exportShapes: true,
     exportTextAsShapes: true,
     shapeExportScale: 2,

@@ -104,4 +104,8 @@ export class SpineAnimationHelper {
 
         return null;
     }
+
+    public static applyEventAnimation(animation:SpineAnimation, event:string, time:number):void {
+        animation.createEvent(event, time);
+    }
 }

@@ -163,6 +163,10 @@ var Converter = /** @class */ (function () {
             if (frame == null || frame.startFrame !== frameIdx) {
                 continue;
             }
+            if (this._config.exportFrameCommentsAsEvents && frame.labelType === 'comment') {
+                context.global.skeleton.createEvent(frame.name);
+                SpineAnimationHelper_1.SpineAnimationHelper.applyEventAnimation(context.global.animation, frame.name, frameTime);
+            }
             if (frame.elements.length === 0) {
                 var layerSlots = context.global.layersCache.get(context.layer);
                 if (layerSlots != null) {
@@ -755,6 +759,9 @@ var SpineAnimationHelper = /** @class */ (function () {
         }
         //-----------------------------------
         return null;
+    };
+    SpineAnimationHelper.applyEventAnimation = function (animation, event, time) {
+        animation.createEvent(event, time);
     };
     return SpineAnimationHelper;
 }());
@@ -2433,6 +2440,7 @@ var config = {
     mergeSkeletonsRootBone: false,
     transformRootBone: false,
     simplifyBonesAndSlots: true,
+    exportFrameCommentsAsEvents: true,
     exportShapes: true,
     exportTextAsShapes: true,
     shapeExportScale: 2,

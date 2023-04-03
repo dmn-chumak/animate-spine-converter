@@ -229,6 +229,16 @@ export class Converter {
                 continue;
             }
 
+            if (this._config.exportFrameCommentsAsEvents && frame.labelType === 'comment') {
+                context.global.skeleton.createEvent(frame.name);
+
+                SpineAnimationHelper.applyEventAnimation(
+                    context.global.animation,
+                    frame.name,
+                    frameTime
+                );
+            }
+
             if (frame.elements.length === 0) {
                 const layerSlots = context.global.layersCache.get(context.layer);
 
