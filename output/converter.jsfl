@@ -968,6 +968,12 @@ var SpineSkeletonHelper = /** @class */ (function () {
                 var name = names[index];
                 if (repeats[name] === 1) {
                     bones[index].name = name;
+                    for (var _b = 0, _c = skeleton.slots; _b < _c.length; _b++) {
+                        var slot = _c[_b];
+                        if (slot.bone === bones[index]) {
+                            slot.name = name + '_slot';
+                        }
+                    }
                 }
                 else {
                     hasCollisions = true;

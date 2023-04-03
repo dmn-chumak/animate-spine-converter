@@ -41,6 +41,12 @@ export class SpineSkeletonHelper {
 
                 if (repeats[name] === 1) {
                     bones[index].name = name;
+
+                    for (const slot of skeleton.slots) {
+                        if (slot.bone === bones[index]) {
+                            slot.name = name + '_slot';
+                        }
+                    }
                 } else {
                     hasCollisions = true;
                 }
