@@ -7,6 +7,7 @@ export interface ConverterConfig {
     mergeSkeletons?:boolean;
     mergeSkeletonsRootBone?:boolean;
     transformRootBone?:boolean;
+    simplifyBonesAndSlots?:boolean;
     exportShapes?:boolean;
     exportTextAsShapes?:boolean;
     shapeExportScale?:number;

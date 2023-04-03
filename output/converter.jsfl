@@ -201,7 +201,7 @@ var Converter = /** @class */ (function () {
         return imagePath;
     };
     Converter.prototype.prepareImagesAttachmentName = function (context, image) {
-        if (this._config.appendSkeletonToImagesPath) {
+        if (this._config.appendSkeletonToImagesPath && this._config.mergeSkeletons) {
             return PathUtil_1.PathUtil.joinPath(context.global.skeleton.name, image);
         }
         return image;
@@ -356,7 +356,7 @@ var ConverterContext = /** @class */ (function () {
         var transform = new SpineTransformMatrix_1.SpineTransformMatrix(element);
         var context = new ConverterContext();
         //-----------------------------------
-        context.bone = this.global.skeleton.createBone(ConvertUtil_1.ConvertUtil.createBoneName(element, this), this.bone.name);
+        context.bone = this.global.skeleton.createBone(ConvertUtil_1.ConvertUtil.createBoneName(element, this), this.bone);
         context.clipping = this.clipping;
         context.slot = null;
         context.time = this.time + time;
@@ -385,7 +385,7 @@ var ConverterContext = /** @class */ (function () {
         //-----------------------------------
         context.bone = this.bone;
         context.clipping = this.clipping;
-        context.slot = this.global.skeleton.createSlot(this.bone.name + '_slot', this.bone.name);
+        context.slot = this.global.skeleton.createSlot(ConvertUtil_1.ConvertUtil.createSlotName(this), this.bone);
         context.time = this.time;
         context.global = this.global;
         context.parent = this;
@@ -488,7 +488,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         context.time = 0;
         //-----------------------------------
         if (config.mergeSkeletons && config.mergeSkeletonsRootBone !== true) {
-            context.bone = context.skeleton.createBone(context.skeleton.name, context.bone.name);
+            context.bone = context.skeleton.createBone(context.skeleton.name, context.bone);
         }
         //-----------------------------------
         if (config.transformRootBone) {
@@ -833,7 +833,7 @@ var SpineSkeleton = /** @class */ (function () {
             return bone;
         }
         bone = new SpineBone_1.SpineBone();
-        bone.parent = this.findBone(parent);
+        bone.parent = parent;
         bone.name = name;
         this.bones.push(bone);
         return bone;
@@ -855,7 +855,7 @@ var SpineSkeleton = /** @class */ (function () {
             return slot;
         }
         slot = new SpineSlot_1.SpineSlot();
-        slot.bone = this.findBone(parent);
+        slot.bone = parent;
         slot.name = name;
         this.slots.push(slot);
         return slot;
@@ -914,6 +914,67 @@ var SpineSkeleton = /** @class */ (function () {
     return SpineSkeleton;
 }());
 exports.SpineSkeleton = SpineSkeleton;
+
+
+/***/ }),
+
+/***/ "./source/spine/SpineSkeletonHelper.ts":
+/*!*********************************************!*\
+  !*** ./source/spine/SpineSkeletonHelper.ts ***!
+  \*********************************************/
+/***/ (function(__unused_webpack_module, exports) {
+
+
+
+exports.SpineSkeletonHelper = void 0;
+var SpineSkeletonHelper = /** @class */ (function () {
+    function SpineSkeletonHelper() {
+    }
+    SpineSkeletonHelper.simplifySkeletonNames = function (skeleton) {
+        while (true) {
+            var hasCollisions = false;
+            var isSimplified = true;
+            //-----------------------------------
+            var bones = [];
+            var repeats = {};
+            var names = [];
+            //-----------------------------------
+            for (var _i = 0, _a = skeleton.bones; _i < _a.length; _i++) {
+                var bone = _a[_i];
+                var path = bone.name.split('/');
+                var name = bone.name;
+                if (path.length > 1) {
+                    name = path.slice(1).join('/');
+                    isSimplified = false;
+                }
+                if (repeats[name] == null) {
+                    repeats[name] = 1;
+                }
+                else {
+                    repeats[name]++;
+                }
+                names.push(name);
+                bones.push(bone);
+            }
+            //-----------------------------------
+            for (var index = 0; index < bones.length; index++) {
+                var name = names[index];
+                if (repeats[name] === 1) {
+                    bones[index].name = name;
+                }
+                else {
+                    hasCollisions = true;
+                }
+            }
+            //-----------------------------------
+            if (hasCollisions || isSimplified) {
+                break;
+            }
+        }
+    };
+    return SpineSkeletonHelper;
+}());
+exports.SpineSkeletonHelper = SpineSkeletonHelper;
 
 
 /***/ }),
@@ -1758,6 +1819,9 @@ var ConvertUtil = /** @class */ (function () {
         }
         return result;
     };
+    ConvertUtil.createSlotName = function (context) {
+        return context.bone.name + '_slot';
+    };
     ConvertUtil.createShapeName = function (context) {
         for (var index = 0; index < Number.MAX_VALUE; index++) {
             var name = 'shape_' + index;
@@ -2359,14 +2423,16 @@ __webpack_unused_export__ = ({ value: true });
 var Converter_1 = __webpack_require__(/*! ./core/Converter */ "./source/core/Converter.ts");
 var Logger_1 = __webpack_require__(/*! ./logger/Logger */ "./source/logger/Logger.ts");
 var SpineFormatV3_8_99_1 = __webpack_require__(/*! ./spine/formats/SpineFormatV3_8_99 */ "./source/spine/formats/SpineFormatV3_8_99.ts");
+var SpineSkeletonHelper_1 = __webpack_require__(/*! ./spine/SpineSkeletonHelper */ "./source/spine/SpineSkeletonHelper.ts");
 //-----------------------------------
 var config = {
     outputFormat: new SpineFormatV3_8_99_1.SpineFormatV3_8_99(),
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
-    mergeSkeletons: true,
+    mergeSkeletons: false,
     mergeSkeletonsRootBone: false,
     transformRootBone: false,
+    simplifyBonesAndSlots: true,
     exportShapes: true,
     exportTextAsShapes: true,
     shapeExportScale: 2,
@@ -2381,6 +2447,9 @@ var result = converter.convertSelection();
 for (var _i = 0, result_1 = result; _i < result_1.length; _i++) {
     var skeleton = result_1[_i];
     Logger_1.Logger.trace('Exporting skeleton: ' + skeleton.name + '...');
+    if (config.simplifyBonesAndSlots) {
+        SpineSkeletonHelper_1.SpineSkeletonHelper.simplifySkeletonNames(skeleton);
+    }
     if (skeleton.bones.length > 0) {
         var skeletonPath = converter.resolveWorkingPath(skeleton.name + '.json');
         FLfile.write(skeletonPath, skeleton.convert(config.outputFormat));

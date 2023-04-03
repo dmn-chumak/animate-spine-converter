@@ -101,6 +101,10 @@ export class ConvertUtil {
         return result;
     }
 
+    public static createSlotName(context:ConverterContext):string {
+        return context.bone.name + '_slot';
+    }
+
     public static createShapeName(context:ConverterContext):string {
         for (let index = 0; index < Number.MAX_VALUE; index++) {
             const name = 'shape_' + index;

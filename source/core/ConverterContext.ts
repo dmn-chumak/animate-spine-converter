@@ -65,7 +65,7 @@ export class ConverterContext {
 
         //-----------------------------------
 
-        context.bone = this.global.skeleton.createBone(ConvertUtil.createBoneName(element, this), this.bone.name);
+        context.bone = this.global.skeleton.createBone(ConvertUtil.createBoneName(element, this), this.bone);
         context.clipping = this.clipping;
         context.slot = null;
         context.time = this.time + time;
@@ -116,7 +116,7 @@ export class ConverterContext {
 
         context.bone = this.bone;
         context.clipping = this.clipping;
-        context.slot = this.global.skeleton.createSlot(this.bone.name + '_slot', this.bone.name);
+        context.slot = this.global.skeleton.createSlot(ConvertUtil.createSlotName(this), this.bone);
         context.time = this.time;
 
         context.global = this.global;

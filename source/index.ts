@@ -2,6 +2,7 @@ import { Converter } from './core/Converter';
 import { ConverterConfig } from './core/ConverterConfig';
 import { Logger } from './logger/Logger';
 import { SpineFormatV3_8_99 } from './spine/formats/SpineFormatV3_8_99';
+import { SpineSkeletonHelper } from './spine/SpineSkeletonHelper';
 
 //-----------------------------------
 
@@ -9,9 +10,10 @@ const config:ConverterConfig = {
     outputFormat: new SpineFormatV3_8_99(),
     imagesExportPath: './images/',
     appendSkeletonToImagesPath: true,
-    mergeSkeletons: true,
+    mergeSkeletons: false,
     mergeSkeletonsRootBone: false,
     transformRootBone: false,
+    simplifyBonesAndSlots: true,
     exportShapes: true,
     exportTextAsShapes: true,
     shapeExportScale: 2,
@@ -28,6 +30,10 @@ const result = converter.convertSelection();
 
 for (const skeleton of result) {
     Logger.trace('Exporting skeleton: ' + skeleton.name + '...');
+
+    if (config.simplifyBonesAndSlots) {
+        SpineSkeletonHelper.simplifySkeletonNames(skeleton);
+    }
 
     if (skeleton.bones.length > 0) {
         const skeletonPath = converter.resolveWorkingPath(skeleton.name + '.json');

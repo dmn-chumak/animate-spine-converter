@@ -280,7 +280,7 @@ export class Converter {
     }
 
     public prepareImagesAttachmentName(context:ConverterContext, image:string):string {
-        if (this._config.appendSkeletonToImagesPath) {
+        if (this._config.appendSkeletonToImagesPath && this._config.mergeSkeletons) {
             return PathUtil.joinPath(context.global.skeleton.name, image);
         }
 

@@ -24,7 +24,7 @@ export class SpineSkeleton {
 
     //-----------------------------------
 
-    public createBone(name:string, parent:string = null):SpineBone {
+    public createBone(name:string, parent:SpineBone = null):SpineBone {
         let bone = this.findBone(name);
 
         if (bone != null) {
@@ -32,7 +32,7 @@ export class SpineSkeleton {
         }
 
         bone = new SpineBone();
-        bone.parent = this.findBone(parent);
+        bone.parent = parent;
         bone.name = name;
         this.bones.push(bone);
 
@@ -53,7 +53,7 @@ export class SpineSkeleton {
         return animation;
     }
 
-    public createSlot(name:string, parent:string = null):SpineSlot {
+    public createSlot(name:string, parent:SpineBone = null):SpineSlot {
         let slot = this.findSlot(name);
 
         if (slot != null) {
@@ -61,7 +61,7 @@ export class SpineSkeleton {
         }
 
         slot = new SpineSlot();
-        slot.bone = this.findBone(parent);
+        slot.bone = parent;
         slot.name = name;
         this.slots.push(slot);
 

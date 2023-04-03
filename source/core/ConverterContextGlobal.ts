@@ -60,10 +60,7 @@ export class ConverterContextGlobal extends ConverterContext {
         //-----------------------------------
 
         if (config.mergeSkeletons && config.mergeSkeletonsRootBone !== true) {
-            context.bone = context.skeleton.createBone(
-                context.skeleton.name,
-                context.bone.name
-            );
+            context.bone = context.skeleton.createBone(context.skeleton.name, context.bone);
         }
 
         //-----------------------------------

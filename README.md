@@ -46,6 +46,7 @@ Several examples of converted animations are available [here](https://dmn-chumak
 - mergeSkeletons;
 - mergeSkeletonsRootBone;
 - transformRootBone;
+- simplifyBonesAndSlots;
 - exportShapes;
 - exportTextAsShapes;
 - shapeExportScale;
