@@ -37,13 +37,18 @@ var Converter = /** @class */ (function () {
             context.global.shapesCache.set(exportTarget, imageName);
         }
         //-----------------------------------
+        var slot = context.createSlot(context.element).slot;
+        if (context.global.stageType === "structure" /* ConverterStageType.STRUCTURE */) {
+            if (context.clipping != null) {
+                // handling clipping end on "structure" stage only
+                context.clipping.end = slot;
+            }
+            return;
+        }
+        //-----------------------------------
         var imagePath = this.prepareImagesExportPath(context, imageName);
         var attachmentName = this.prepareImagesAttachmentName(context, imageName);
-        var slot = context.createSlot(context.element).slot;
         var attachment = slot.createAttachment(attachmentName, "region" /* SpineAttachmentType.REGION */);
-        if (context.clipping != null) {
-            context.clipping.end = slot;
-        }
         //-----------------------------------
         var spineImage = context.global.imagesCache.get(imagePath);
         if (spineImage == null) {
@@ -80,7 +85,12 @@ var Converter = /** @class */ (function () {
         //-----------------------------------
         attachment.vertices = ShapeUtil_1.ShapeUtil.extractVertices(context.element);
         attachment.vertexCount = attachment.vertices.length / 2;
-        attachment.end = context.global.skeleton.findSlot(slot.name);
+        //-----------------------------------
+        if (context.global.stageType === "structure" /* ConverterStageType.STRUCTURE */) {
+            // handling clipping end on "structure" stage only
+            attachment.end = context.global.skeleton.findSlot(slot.name);
+            return;
+        }
         //-----------------------------------
         SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, slot, context, attachment, context.time);
     };
@@ -151,11 +161,13 @@ var Converter = /** @class */ (function () {
     };
     //-----------------------------------
     Converter.prototype.convertElementLayer = function (context, convertLayer, layerConvertFactory) {
-        var _a = context.global.label, startFrameIdx = _a.startFrameIdx, endFrameIdx = _a.endFrameIdx;
+        var _a = context.global, label = _a.label, stageType = _a.stageType;
         var frames = convertLayer.frames;
-        if (context.parent != null) {
-            startFrameIdx = 0;
-            endFrameIdx = frames.length - 1;
+        var startFrameIdx = 0;
+        var endFrameIdx = frames.length - 1;
+        if (context.parent == null && label != null && stageType === "animation" /* ConverterStageType.ANIMATION */) {
+            startFrameIdx = label.startFrameIdx;
+            endFrameIdx = label.endFrameIdx;
         }
         for (var frameIdx = startFrameIdx; frameIdx <= endFrameIdx; frameIdx++) {
             var frameTime = (frameIdx - startFrameIdx) / context.global.frameRate;
@@ -165,11 +177,13 @@ var Converter = /** @class */ (function () {
             }
             if (this._config.exportFrameCommentsAsEvents && frame.labelType === 'comment') {
                 context.global.skeleton.createEvent(frame.name);
-                SpineAnimationHelper_1.SpineAnimationHelper.applyEventAnimation(context.global.animation, frame.name, frameTime);
+                if (stageType === "animation" /* ConverterStageType.ANIMATION */) {
+                    SpineAnimationHelper_1.SpineAnimationHelper.applyEventAnimation(context.global.animation, frame.name, frameTime);
+                }
             }
             if (frame.elements.length === 0) {
                 var layerSlots = context.global.layersCache.get(context.layer);
-                if (layerSlots != null) {
+                if (layerSlots != null && stageType === "animation" /* ConverterStageType.ANIMATION */) {
                     var subcontext = context.switchContextFrame(frame);
                     for (var _i = 0, layerSlots_1 = layerSlots; _i < layerSlots_1.length; _i++) {
                         var slot = layerSlots_1[_i];
@@ -216,9 +230,12 @@ var Converter = /** @class */ (function () {
     Converter.prototype.convertSymbolInstance = function (element, context) {
         if (element.elementType === 'instance' && element.instanceType === 'symbol') {
             try {
+                context.global.stageType = "structure" /* ConverterStageType.STRUCTURE */;
+                this.convertElement(context);
                 for (var _i = 0, _a = context.global.labels; _i < _a.length; _i++) {
                     var label = _a[_i];
                     var subcontext = context.switchContextAnimation(label);
+                    subcontext.global.stageType = "animation" /* ConverterStageType.ANIMATION */;
                     this.convertElement(subcontext);
                 }
                 return true;
@@ -380,7 +397,9 @@ var ConverterContext = /** @class */ (function () {
             SpineAnimationHelper_1.SpineAnimationHelper.applyBoneTransform(context.bone, transform);
         }
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applyBoneAnimation(context.global.animation, context.bone, context, transform, context.time);
+        if (context.global.stageType === "animation" /* ConverterStageType.ANIMATION */) {
+            SpineAnimationHelper_1.SpineAnimationHelper.applyBoneAnimation(context.global.animation, context.bone, context, transform, context.time);
+        }
         //-----------------------------------
         return context;
     };
@@ -410,12 +429,11 @@ var ConverterContext = /** @class */ (function () {
                 var layerSlots = context.global.layersCache.get(context.layer);
                 layerSlots.push(context.slot);
             }
-            if (context.time !== 0) {
-                SpineAnimationHelper_1.SpineAnimationHelper.applySlotAttachment(context.global.animation, context.slot, context, null, 0);
-            }
         }
         //-----------------------------------
-        SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context, context.color.merge(), context.time);
+        if (context.global.stageType === "animation" /* ConverterStageType.ANIMATION */) {
+            SpineAnimationHelper_1.SpineAnimationHelper.applySlotAnimation(context.global.animation, context.slot, context, context.color.merge(), context.time);
+        }
         //-----------------------------------
         return context;
     };
@@ -472,6 +490,7 @@ var ConverterContextGlobal = /** @class */ (function (_super) {
         var context = (cache == null) ? ConverterContextGlobal.initializeCache() : cache;
         //-----------------------------------
         context.global = context;
+        context.stageType = "animation" /* ConverterStageType.ANIMATION */;
         context.parent = null;
         context.labels = ConvertUtil_1.ConvertUtil.obtainElementLabels(element);
         context.animation = null;
@@ -2445,7 +2464,7 @@ var config = {
     mergeSkeletons: false,
     mergeSkeletonsRootBone: false,
     transformRootBone: false,
-    simplifyBonesAndSlots: true,
+    simplifyBonesAndSlots: false,
     exportFrameCommentsAsEvents: true,
     exportShapes: true,
     exportTextAsShapes: true,

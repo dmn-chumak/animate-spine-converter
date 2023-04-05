@@ -8,6 +8,7 @@ import { ConvertUtil } from '../utils/ConvertUtil';
 import { ConverterColor } from './ConverterColor';
 import { ConverterContextGlobal } from './ConverterContextGlobal';
 import { ConverterFrameLabel } from './ConverterFrameLabel';
+import { ConverterStageType } from './ConverterStageType';
 
 export class ConverterContext {
     public global:ConverterContextGlobal;
@@ -96,13 +97,15 @@ export class ConverterContext {
 
         //-----------------------------------
 
-        SpineAnimationHelper.applyBoneAnimation(
-            context.global.animation,
-            context.bone,
-            context,
-            transform,
-            context.time
-        );
+        if (context.global.stageType === ConverterStageType.ANIMATION) {
+            SpineAnimationHelper.applyBoneAnimation(
+                context.global.animation,
+                context.bone,
+                context,
+                transform,
+                context.time
+            );
+        }
 
         //-----------------------------------
 
@@ -144,27 +147,19 @@ export class ConverterContext {
                 const layerSlots = context.global.layersCache.get(context.layer);
                 layerSlots.push(context.slot);
             }
-
-            if (context.time !== 0) {
-                SpineAnimationHelper.applySlotAttachment(
-                    context.global.animation,
-                    context.slot,
-                    context,
-                    null,
-                    0
-                );
-            }
         }
 
         //-----------------------------------
 
-        SpineAnimationHelper.applySlotAnimation(
-            context.global.animation,
-            context.slot,
-            context,
-            context.color.merge(),
-            context.time
-        );
+        if (context.global.stageType === ConverterStageType.ANIMATION) {
+            SpineAnimationHelper.applySlotAnimation(
+                context.global.animation,
+                context.slot,
+                context,
+                context.color.merge(),
+                context.time
+            );
+        }
 
         //-----------------------------------
 

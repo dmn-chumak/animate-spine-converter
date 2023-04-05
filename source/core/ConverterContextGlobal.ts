@@ -13,6 +13,7 @@ import { ConverterConfig } from './ConverterConfig';
 import { ConverterContext } from './ConverterContext';
 import { ConverterFrameLabel } from './ConverterFrameLabel';
 import { ConverterMap } from './ConverterMap';
+import { ConverterStageType } from './ConverterStageType';
 
 export class ConverterContextGlobal extends ConverterContext {
     public imagesCache:ConverterMap<string, SpineImage>;
@@ -20,6 +21,7 @@ export class ConverterContextGlobal extends ConverterContext {
     public layersCache:ConverterMap<FlashLayer, SpineSlot[]>;
 
     public labels:ConverterFrameLabel[];
+    public stageType:ConverterStageType;
     public animation:SpineAnimation;
     public label:ConverterFrameLabel;
     public skeleton:SpineSkeleton;
@@ -33,6 +35,7 @@ export class ConverterContextGlobal extends ConverterContext {
         //-----------------------------------
 
         context.global = context;
+        context.stageType = ConverterStageType.ANIMATION;
         context.parent = null;
 
         context.labels = ConvertUtil.obtainElementLabels(element);

@@ -13,7 +13,7 @@ const config:ConverterConfig = {
     mergeSkeletons: false,
     mergeSkeletonsRootBone: false,
     transformRootBone: false,
-    simplifyBonesAndSlots: true,
+    simplifyBonesAndSlots: false,
     exportFrameCommentsAsEvents: true,
     exportShapes: true,
     exportTextAsShapes: true,

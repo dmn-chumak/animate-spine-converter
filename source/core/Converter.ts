@@ -17,6 +17,7 @@ import { StringUtil } from '../utils/StringUtil';
 import { ConverterConfig } from './ConverterConfig';
 import { ConverterContext } from './ConverterContext';
 import { ConverterContextGlobal } from './ConverterContextGlobal';
+import { ConverterStageType } from './ConverterStageType';
 
 export class Converter {
     private readonly _document:FlashDocument;
@@ -41,14 +42,22 @@ export class Converter {
 
         //-----------------------------------
 
+        const { slot } = context.createSlot(context.element);
+
+        if (context.global.stageType === ConverterStageType.STRUCTURE) {
+            if (context.clipping != null) {
+                // handling clipping end on "structure" stage only
+                context.clipping.end = slot;
+            }
+
+            return;
+        }
+
+        //-----------------------------------
+
         const imagePath = this.prepareImagesExportPath(context, imageName);
         const attachmentName = this.prepareImagesAttachmentName(context, imageName);
-        const { slot } = context.createSlot(context.element);
         const attachment = slot.createAttachment(attachmentName, SpineAttachmentType.REGION) as SpineRegionAttachment;
-
-        if (context.clipping != null) {
-            context.clipping.end = slot;
-        }
 
         //-----------------------------------
 
@@ -108,7 +117,15 @@ export class Converter {
 
         attachment.vertices = ShapeUtil.extractVertices(context.element);
         attachment.vertexCount = attachment.vertices.length / 2;
-        attachment.end = context.global.skeleton.findSlot(slot.name);
+
+        //-----------------------------------
+
+        if (context.global.stageType === ConverterStageType.STRUCTURE) {
+            // handling clipping end on "structure" stage only
+            attachment.end = context.global.skeleton.findSlot(slot.name);
+
+            return;
+        }
 
         //-----------------------------------
 
@@ -213,12 +230,15 @@ export class Converter {
     //-----------------------------------
 
     private convertElementLayer(context:ConverterContext, convertLayer:FlashLayer, layerConvertFactory:LayerConvertFactory):void {
-        let { startFrameIdx, endFrameIdx } = context.global.label;
+        const { label, stageType } = context.global;
         const frames = convertLayer.frames;
 
-        if (context.parent != null) {
-            startFrameIdx = 0;
-            endFrameIdx = frames.length - 1;
+        let startFrameIdx = 0;
+        let endFrameIdx = frames.length - 1;
+
+        if (context.parent == null && label != null && stageType === ConverterStageType.ANIMATION) {
+            startFrameIdx = label.startFrameIdx;
+            endFrameIdx = label.endFrameIdx;
         }
 
         for (let frameIdx = startFrameIdx; frameIdx <= endFrameIdx; frameIdx++) {
@@ -232,17 +252,19 @@ export class Converter {
             if (this._config.exportFrameCommentsAsEvents && frame.labelType === 'comment') {
                 context.global.skeleton.createEvent(frame.name);
 
-                SpineAnimationHelper.applyEventAnimation(
-                    context.global.animation,
-                    frame.name,
-                    frameTime
-                );
+                if (stageType === ConverterStageType.ANIMATION) {
+                    SpineAnimationHelper.applyEventAnimation(
+                        context.global.animation,
+                        frame.name,
+                        frameTime
+                    );
+                }
             }
 
             if (frame.elements.length === 0) {
                 const layerSlots = context.global.layersCache.get(context.layer);
 
-                if (layerSlots != null) {
+                if (layerSlots != null && stageType === ConverterStageType.ANIMATION) {
                     const subcontext = context.switchContextFrame(frame);
 
                     for (const slot of layerSlots) {
@@ -304,8 +326,12 @@ export class Converter {
     public convertSymbolInstance(element:FlashElement, context:ConverterContext):boolean {
         if (element.elementType === 'instance' && element.instanceType === 'symbol') {
             try {
+                context.global.stageType = ConverterStageType.STRUCTURE;
+                this.convertElement(context);
+
                 for (const label of context.global.labels) {
                     const subcontext = context.switchContextAnimation(label);
+                    subcontext.global.stageType = ConverterStageType.ANIMATION;
                     this.convertElement(subcontext);
                 }
 
