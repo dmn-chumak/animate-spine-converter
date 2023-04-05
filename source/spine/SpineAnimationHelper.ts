@@ -50,7 +50,7 @@ export class SpineAnimationHelper {
         const attachmentFrame = attachmentTimeline.createFrame(time, curve);
         attachmentFrame.name = (attachment != null) ? attachment.name : null;
 
-        if (time === 0) {
+        if (context.frame != null && context.frame.startFrame === 0) {
             slot.attachment = attachment;
         }
     }

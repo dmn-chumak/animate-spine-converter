@@ -737,7 +737,7 @@ var SpineAnimationHelper = /** @class */ (function () {
         var attachmentTimeline = timeline.createTimeline("attachment" /* SpineTimelineType.ATTACHMENT */);
         var attachmentFrame = attachmentTimeline.createFrame(time, curve);
         attachmentFrame.name = (attachment != null) ? attachment.name : null;
-        if (time === 0) {
+        if (context.frame != null && context.frame.startFrame === 0) {
             slot.attachment = attachment;
         }
     };
